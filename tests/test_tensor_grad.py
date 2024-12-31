@@ -49,5 +49,24 @@ def test_grad_matmul():
     assert np.allclose(c.grad, c_tor.grad.detach().numpy(), atol=1e-6)
     
     
+def test_grad_broadcast():
+    ###### NNCL ########
+    a = Tensor(shape=(10, 5), dtype=Tensor.FLOAT32, grad_en=True).rand(-1, 1)
+    b = Tensor(shape=(1, 5), dtype=Tensor.FLOAT32, grad_en=True).rand(-1, 1)
+    
+    y = a + b
+    y.backward()
+            
+    ######### TORCH ###########    
+    a_tor = torch.tensor(a.data, dtype=torch.float32, requires_grad=True)
+    b_tor = torch.tensor(b.data, dtype=torch.float32, requires_grad=True)
+    
+    y_tor = a_tor + b_tor
+    y_tor.backward(torch.ones_like(y_tor))    
+        
+    assert np.allclose(a.grad, a_tor.grad.detach().numpy(), atol=1e-6)
+    assert np.allclose(b.grad, b_tor.grad.detach().numpy(), atol=1e-6)
+    
+    
     
     
