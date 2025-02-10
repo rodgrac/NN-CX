@@ -27,6 +27,6 @@ def train(model, loss_fn, optimizer, dataloader, epochs):
                                             
             epoch_loss[split] /= len(dataloader[split])
         
-        print(f"Epoch {epoch} => Train loss: {epoch_loss['train']}, Val loss: {epoch_loss['val']}")
+        print(f"Epoch {epoch} => Train loss: {epoch_loss['train']:.4f}, Val loss: {epoch_loss['val']:.4f}")
             
             
