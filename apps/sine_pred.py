@@ -7,7 +7,7 @@ sys.path.append('./')
 
 from nncl.datasets.sinefn import Dataset, SineFn
 from nncl.dataloader import DataLoader
-from nncl.models.mlp import SineMLP
+from nncl.models.sinemlp import SineMLP
 from nncl.losses import MSELoss
 from nncl.optimizers import SGD
 from nncl.trainer import train
@@ -26,7 +26,7 @@ if __name__ == '__main__':
     # m.load_parameters('weights/sine_pred.npz')
             
     loss_fn = MSELoss()
-    opt = SGD(m.parameters(), lr=0.0005)
+    opt = SGD(m.parameters(), lr=0.0001)
     
     train(m, loss_fn, opt, dl, 100)
     
