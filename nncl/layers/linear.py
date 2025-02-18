@@ -3,10 +3,10 @@ from nncl.tensor import Tensor
 
 
 class Linear:
-    def __init__(self, in_features, out_features, bias=True) -> None:
-        self.w = Tensor(shape=(in_features, out_features), grad_en=True).randn()
+    def __init__(self, in_features, out_features, backend, bias=True) -> None:
+        self.w = Tensor(shape=(in_features, out_features), backend=backend, grad_en=True).randn()
         if bias:
-            self.bias = Tensor(shape=(1, out_features), grad_en=True)
+            self.bias = Tensor(shape=(1, out_features), backend=backend, grad_en=True)
         else:
             self.bias = None
             

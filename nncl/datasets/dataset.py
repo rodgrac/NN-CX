@@ -8,7 +8,7 @@ class Dataset(ABC):
         pass
     
     @abstractmethod
-    def __getitem__(self, idx):
+    def __getitem__(self, key):
         # Needs to return a Tensor tuple of form: {inputs, targets}
         pass
     

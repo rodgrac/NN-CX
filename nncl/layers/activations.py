@@ -9,7 +9,7 @@ class ReLU:
         return self.forward(x)
     
     def forward(self, x):
-        out = Tensor(data=np.maximum(0, x.data), grad_en=x.grad_en)
+        out = Tensor(data=np.maximum(0, x.data), backend=x.backend, grad_en=x.grad_en)
         
         if out.grad_en:
             out.grad_fn = lambda grad: [grad * (x.data > 0)]
@@ -20,12 +20,13 @@ class ReLU:
     def __repr__(self) -> str:
         return f"ReLU"
         
+        
 class Sigmoid:
     def __call__(self, x) -> Any:
         return self.forward(x)
     
     def forward(self, x):
-        out = Tensor(1/(1 + np.exp(-x.data)), grad_en=x.grad_en)
+        out = Tensor(1/(1 + x.backend.exp(-x.data)), backend=x.backend, grad_en=x.grad_en)
         
         if out.grad_en:
             out.grad_fn = lambda grad: [grad * out.data * (1 - out.data)]
@@ -36,12 +37,14 @@ class Sigmoid:
     def __repr__(self) -> str:
         return f"Sigmoid"
     
+    
 class Tanh:
     def __call__(self, x) -> Any:
         return self.forward(x)
     
     def forward(self, x):
-        out = Tensor((np.exp(x.data) - np.exp(-x.data)) /(np.exp(x.data) + np.exp(-x.data)), grad_en=x.grad_en)
+        out = Tensor((x.backend.exp(x.data) - x.backend.exp(-x.data)) /(x.backend.exp(x.data) + x.backend.exp(-x.data)), 
+                     backend=x.backend, grad_en=x.grad_en)
         
         if out.grad_en:
             out.grad_fn = lambda grad: [grad * (1 - out.data**2.0)]

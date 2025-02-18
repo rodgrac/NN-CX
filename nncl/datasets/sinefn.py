@@ -15,5 +15,6 @@ class SineFn(Dataset):
     def __len__(self):
         return len(self.inputs)
     
-    def __getitem__(self, idx):
-        return Tensor(self.inputs[idx], grad_en=True), Tensor(self.targets[idx])
+    def __getitem__(self, key):
+        idx, backend = key
+        return Tensor(self.inputs[idx], backend=backend, grad_en=True), Tensor(self.targets[idx], backend=backend)

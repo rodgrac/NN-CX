@@ -4,8 +4,9 @@ import numpy as np
 from nncl.tensor import Tensor
 
 class DataLoader:
-    def __init__(self, dataset, batch_size, idxs=None, shuffle=True) -> None:
+    def __init__(self, dataset, backend, batch_size, idxs=None, shuffle=True) -> None:
         self.dataset = dataset
+        self.backend = backend
         self.batch_size = batch_size
         self.shuffle = shuffle
         self.idxs = idxs
@@ -20,7 +21,7 @@ class DataLoader:
             batch_inputs = []
             batch_targets = []
             for idx in self.idxs[i:i+self.batch_size]:
-                input_t, target_t = self.dataset[idx]
+                input_t, target_t = self.dataset[(idx, self.backend)]
                 batch_inputs.append(input_t)
                 batch_targets.append(target_t)
                             
