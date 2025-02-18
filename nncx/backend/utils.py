@@ -1,7 +1,7 @@
-from nncl.backend.backend_cpu import CPUBackend
-from nncl.backend.backend_gpu import GPUBackend
+from nncx.backend.backend_cpu import CPUBackend
+from nncx.backend.backend_gpu import GPUBackend
 
-from nncl.enums import BackendType
+from nncx.enums import BackendType
 
 
 def init_backend(backend_type):    

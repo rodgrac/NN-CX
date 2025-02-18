@@ -2,8 +2,8 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-from nncl.tensor import Tensor
-from nncl.layers.linear import Linear
+from nncx.tensor import Tensor
+from nncx.layers.linear import Linear
 
 
 def test_grad_linear():

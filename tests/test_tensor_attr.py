@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-from nncl.tensor import Tensor
+from nncx.tensor import Tensor
 
 def test_to_dtype():
     t = Tensor(shape=(10, 5), dtype=Tensor.FLOAT32).rand(-10, 10)

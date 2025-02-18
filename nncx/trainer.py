@@ -1,5 +1,5 @@
-from nncl.tensor import Tensor
-from nncl.utils import timeit
+from nncx.tensor import Tensor
+from nncx.utils import timeit
 
 @timeit
 def train(model, loss_fn, optimizer, dataloader, epochs):

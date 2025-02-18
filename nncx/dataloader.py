@@ -1,7 +1,7 @@
 import math
 import numpy as np
 
-from nncl.tensor import Tensor
+from nncx.tensor import Tensor
 
 class DataLoader:
     def __init__(self, dataset, backend, batch_size, idxs=None, shuffle=True) -> None:

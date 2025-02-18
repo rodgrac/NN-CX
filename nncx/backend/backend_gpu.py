@@ -1,7 +1,7 @@
 import cupy as cp
 
-from nncl.backend.backend import Backend
-from nncl.enums import DataType, BackendType
+from nncx.backend.backend import Backend
+from nncx.enums import DataType, BackendType
 
 class GPUBackend(Backend):
     def __init__(self):

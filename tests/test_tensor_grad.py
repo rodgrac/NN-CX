@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-from nncl.tensor import Tensor
+from nncx.tensor import Tensor
 
 def test_grad_elementwise():
     ###### NNCL ########

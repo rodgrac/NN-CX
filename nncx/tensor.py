@@ -2,9 +2,9 @@ import copy
 import uuid
 import numpy as np
 
-from nncl import utils
-from nncl.backend.utils import get_backend_type
-from nncl.enums import DataType, BackendType
+from nncx import utils
+from nncx.backend.utils import get_backend_type
+from nncx.enums import DataType, BackendType
 
 class Tensor:
     

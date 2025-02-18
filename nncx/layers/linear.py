@@ -1,5 +1,5 @@
 from typing import Any
-from nncl.tensor import Tensor
+from nncx.tensor import Tensor
 
 
 class Linear:

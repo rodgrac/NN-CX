@@ -1,7 +1,7 @@
 from typing import Any
 import numpy as np
 
-from nncl.tensor import Tensor
+from nncx.tensor import Tensor
 
 
 class ReLU:

@@ -1,7 +1,7 @@
 import numpy as np
 
-from nncl.datasets.dataset import Dataset
-from nncl.tensor import Tensor
+from nncx.datasets.dataset import Dataset
+from nncx.tensor import Tensor
 
 
 class SineFn(Dataset):

@@ -5,15 +5,15 @@ import matplotlib.pyplot as plt
 
 sys.path.append('./')
 
-from nncl.backend.utils import init_backend
-from nncl.datasets.sinefn import Dataset, SineFn
-from nncl.dataloader import DataLoader
-from nncl.models.sinemlp import SineMLP
-from nncl.losses import MSELoss
-from nncl.optimizers import SGD
-from nncl.trainer import train
-from nncl.tensor import Tensor
-from nncl.enums import BackendType
+from nncx.backend.utils import init_backend
+from nncx.datasets.sinefn import Dataset, SineFn
+from nncx.dataloader import DataLoader
+from nncx.models.sinemlp import SineMLP
+from nncx.losses import MSELoss
+from nncx.optimizers import SGD
+from nncx.trainer import train
+from nncx.tensor import Tensor
+from nncx.enums import BackendType
 
 
 if __name__ == '__main__':

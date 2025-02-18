@@ -4,8 +4,8 @@ from typing import Any
 import numpy as np
 import cupy as cp
 
-from nncl.backend.utils import get_backend_type
-from nncl.enums import BackendType
+from nncx.backend.utils import get_backend_type
+from nncx.enums import BackendType
 
     
 class Model(ABC):

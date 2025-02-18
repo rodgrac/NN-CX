@@ -1,6 +1,6 @@
-from nncl.models.model import Model
-from nncl.layers.linear import Linear
-from nncl.layers.activations import Tanh
+from nncx.models.model import Model
+from nncx.layers.linear import Linear
+from nncx.layers.activations import Tanh
 
 
 class SineMLP(Model):
