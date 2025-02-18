@@ -2,13 +2,27 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 import numpy as np
+import cupy as cp
+
+from nncl.backend.utils import get_backend_type
+from nncl.enums import BackendType
 
     
 class Model(ABC):
-    def __init__(self) -> None:
+    def __init__(self, backend) -> None:
         super().__init__()
         self._modelparams = []
         self.training = None
+        
+        self.backend = backend
+        
+        self.backend_mod = None
+        if get_backend_type(backend) ==BackendType.CPU:
+            self.backend_mod = np
+        elif get_backend_type(backend) ==BackendType.GPU:
+            self.backend_mod = cp
+        else:
+            raise NotImplementedError
         
     @abstractmethod
     def forward(self, x):
@@ -34,12 +48,12 @@ class Model(ABC):
             attr = getattr(self, attr_name)
             if callable(attr) and hasattr(attr, '_params'):
                 param_dict[attr_name] = attr._params
-                
-        np.savez(save_path, **param_dict)
+            
+            self.backend_mod.savez(save_path, **param_dict)
         print(f"Model parameters saved as {save_path}")
         
     def load_parameters(self, load_path):
-        params_dict = np.load(load_path, allow_pickle=True)
+        params_dict = self.backend_mod.load(load_path, allow_pickle=True)
         for attr_name in dir(self):
             attr = getattr(self, attr_name)
             if callable(attr) and hasattr(attr, '_params'):
