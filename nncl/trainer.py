@@ -1,5 +1,7 @@
 from nncl.tensor import Tensor
+from nncl.utils import timeit
 
+@timeit
 def train(model, loss_fn, optimizer, dataloader, epochs):
     assert type(model.backend) == type(dataloader['train'].backend), "Model and data need to be of same backend type!"
     
