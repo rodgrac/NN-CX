@@ -1,7 +1,15 @@
+import os
 from abc import ABC, abstractmethod
 import numpy as np
 
+from nncx.config import PROJECT_ROOT
+
 class Dataset(ABC):
+    def __init__(self):
+        super().__init__()
+        
+        self.datasets_root = os.path.join(PROJECT_ROOT, 'data')
+        os.makedirs(self.datasets_root, exist_ok=True)
     
     @abstractmethod
     def __len__(self):

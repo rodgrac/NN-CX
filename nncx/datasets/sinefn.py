@@ -13,7 +13,7 @@ class SineFn(Dataset):
         self.targets = np.sin(self.inputs)
         
     def __len__(self):
-        return len(self.inputs)
+        return len(self.targets)
     
     def __getitem__(self, key):
         idx, backend = key
