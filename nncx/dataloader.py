@@ -4,16 +4,14 @@ import numpy as np
 from nncx.tensor import Tensor
 
 class DataLoader:
-    def __init__(self, dataset, backend, batch_size, idxs=None, shuffle=True) -> None:
+    def __init__(self, dataset, backend, batch_size, shuffle=True) -> None:
         self.dataset = dataset
         self.backend = backend
         self.batch_size = batch_size
         self.shuffle = shuffle
-        self.idxs = idxs
         
     def __iter__(self):
-        if self.idxs is None:
-            self.idxs = np.arange(len(self.dataset))
+        self.idxs = np.arange(len(self.dataset))
         if self.shuffle:
             np.random.shuffle(self.idxs)
             
