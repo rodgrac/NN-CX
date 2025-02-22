@@ -33,4 +33,22 @@ def train(model, loss_fn, optimizer, dataloader, epochs):
         
         print(f"Epoch {epoch} => Train loss: {epoch_loss['train']:.4f}, Val loss: {epoch_loss['val']:.4f}")
             
-            
+
+@timeit
+def evaluate(model, loss_fn, dataloader):
+    assert type(model.backend) == type(dataloader['test'].backend), "Model and data need to be of same backend type!"
+    
+    model.eval()
+    
+    test_loss = 0                        
+    for inputs, targets in dataloader['test']:
+        with Tensor.no_grad():        
+            preds = model(inputs)
+            loss = loss_fn(preds, targets)
+        
+            test_loss += float(loss.detach().data)
+        
+                                    
+    test_loss /= len(dataloader['test'])
+    
+    print(f"Test loss: {test_loss:.4f}")
