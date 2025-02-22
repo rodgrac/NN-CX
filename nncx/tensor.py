@@ -282,5 +282,5 @@ class Tensor:
     
             
     def __repr__(self) -> str:
-        return f"Tensor(data=\n{self.data}, shape={self.shape}, dtype={self.dtype}, backend={self.backend}, grad_en={self.grad_en})"
+        return f"Tensor(data=\n{self.data}, shape={self.shape}, dtype={self.dtype}, backend={get_backend_type(self.backend)}, grad_en={self.grad_en})"
         
