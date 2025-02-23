@@ -7,6 +7,7 @@ from nncx.models.regression import Regression
 from nncx.losses import MSELoss
 from nncx.optimizers import SGD
 from nncx.trainer import train, evaluate
+from nncx.visualizer import visualize_predictions
 
 if __name__ == '__main__':
     do_train = True
@@ -44,9 +45,9 @@ if __name__ == '__main__':
     else:
         model.load_parameters('weights/housing_prediction.npz')
     
+    preds, targets = evaluate(model, loss_fn, dl)
     
-    evaluate(model, loss_fn, dl)
-    
+    visualize_predictions(preds, targets, title='Predicted vs Actual House Pricing', xlabel='Actual Prices', ylabel='Predicted Prices')
     
     
     
