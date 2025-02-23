@@ -7,7 +7,7 @@ from nncx.losses import CrossEntropyLoss
 from nncx.optimizers import SGD
 from nncx.trainer import train, evaluate
 from nncx.metrics import ClassificationMetrics
-from nncx.visualizer import plot_confusion_matrix
+from nncx.visualizer import plot_confusion_matrix, visualize_predictions
 from nncx.enums import BackendType
 
 if __name__ == '__main__':
@@ -54,6 +54,7 @@ if __name__ == '__main__':
     
     plot_confusion_matrix(preds, targets, num_classes=val_test_ds.num_labels, class_names=val_test_ds.label_names)
     
+    visualize_predictions(model, dl['test'])
     
     
     
