@@ -47,7 +47,9 @@ class Model(ABC):
         for attr_name in dir(self):
             attr = getattr(self, attr_name)
             if callable(attr) and hasattr(attr, '_params'):
-                param_dict[attr_name] = attr._params
+                param_dict[attr_name] = []
+                for i, param in enumerate(attr._params):
+                    param_dict[attr_name + '_p' + str(i)] = param.data
             
             self.backend_mod.savez(save_path, **param_dict)
         print(f"Model parameters saved as {save_path}")
@@ -57,8 +59,8 @@ class Model(ABC):
         for attr_name in dir(self):
             attr = getattr(self, attr_name)
             if callable(attr) and hasattr(attr, '_params'):
-                for i in range(len(attr._params)):
-                    attr._params[i] = params_dict[attr_name][i]
+                for i, param in enumerate(attr._params):
+                    param.data = params_dict[attr_name + '_p' + str(i)]
         print(f"Model parameters loaded from {load_path}")
         
                 
