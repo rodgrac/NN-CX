@@ -87,6 +87,10 @@ class Dataset(ABC):
 
 class SubDataset:
     def __init__(self, dataset, indices):
+        
+        self.__dict__ = dataset.__dict__.copy()
+        self.name += 'Subset'
+        
         self.dataset = dataset
         self.indices = indices
         
