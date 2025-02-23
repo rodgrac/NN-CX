@@ -51,7 +51,7 @@ class CPUBackend(Backend):
     def matmul(self, a, b):
         return np.matmul(a, b)
     
-    def sum(self, x, axis, keepdims):
+    def sum(self, x, axis=None, keepdims=False):
         return np.sum(x, axis=axis, keepdims=keepdims)
     
     def add(self, a, b):
@@ -62,6 +62,18 @@ class CPUBackend(Backend):
         
     def exp(self, x):
         return np.exp(x)
+    
+    def log(self, x):
+        return np.log(x)
+    
+    def max(self, x, axis=None, keepdims=False):
+        return np.max(x, axis=axis, keepdims=keepdims)
+    
+    def argmax(self, x, axis=None):
+        return np.argmax(x, axis=axis)
+    
+    def diagflat(self, x):
+        return np.diagflat(x)
     
     def __repr__(self):
         return BackendType.CPU

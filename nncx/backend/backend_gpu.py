@@ -53,7 +53,7 @@ class GPUBackend(Backend):
     def matmul(self, a, b):
         return cp.matmul(a, b)
     
-    def sum(self, x, axis, keepdims):
+    def sum(self, x, axis=None, keepdims=False):
         return cp.sum(x, axis=axis, keepdims=keepdims)
     
     def add(self, a, b):
@@ -64,6 +64,18 @@ class GPUBackend(Backend):
     
     def exp(self, x):
         return cp.exp(x)
+    
+    def log(self, x):
+        return cp.log(x)
+    
+    def argmax(self, x, axis=-1):
+        return cp.argmax(x, axis=axis)
+    
+    def max(self, x, axis=None, keepdims=False):
+        return cp.max(x, axis=axis, keepdims=keepdims)
+    
+    def diagflat(self, x):
+        return cp.diagflat(x)
     
     def __repr__(self):
         return BackendType.GPU

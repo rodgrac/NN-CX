@@ -38,7 +38,7 @@ class Backend(ABC):
     def matmul(self, a, b):
         raise NotImplementedError
     
-    def sum(self, x, axis, keepdims):
+    def sum(self, x, axis=None, keepdims=False):
         raise NotImplementedError 
     
     def add(self, a, b):
@@ -49,6 +49,18 @@ class Backend(ABC):
         
     def exp(self, x):
         raise NotImplementedError 
+    
+    def log(self, x):
+        raise NotImplementedError 
+    
+    def argmax(self, x, axis=-1):
+        raise NotImplementedError
+    
+    def max(self, x, axis=None, keepdims=False):
+        raise NotImplementedError
+    
+    def diagflat(self, x):
+        raise NotImplementedError
     
     def __repr__(self):
         raise NotImplementedError 
