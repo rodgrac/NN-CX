@@ -10,6 +10,9 @@ class Standardize(Transform):
         
     def __call__(self, tensor):
         return (tensor - self.mean) / self.std
+    
+    def invert(self, tensor):
+        return tensor * self.std + self.mean
 
 class Normalize(Transform):
     def __init__(self, min_val, max_val):
@@ -19,3 +22,6 @@ class Normalize(Transform):
         
     def __call__(self, tensor):
         return (tensor - self.min_val) / (self.max_val - self.min_val)
+    
+    def invert(self, tensor):
+        return tensor * (self.max_val - self.min_val) + self.min_val
