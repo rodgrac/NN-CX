@@ -1,3 +1,5 @@
+import numpy as np
+
 class Transform:
     def __call__(self, tensor):
         raise NotImplementedError
@@ -25,3 +27,16 @@ class Normalize(Transform):
     
     def invert(self, tensor):
         return tensor * (self.max_val - self.min_val) + self.min_val
+    
+
+class Flatten(Transform):
+    def __call__(self, tensor):
+        return tensor.flatten()
+    
+    
+class OneHotEncode(Transform):
+    def __init__(self, num_classes):
+        self.enc = np.eye(num_classes)
+        
+    def __call__(self, tensor):
+        return self.enc[np.array(tensor)]

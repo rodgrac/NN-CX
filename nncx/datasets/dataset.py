@@ -15,6 +15,9 @@ class Dataset(ABC):
         self.inputs = None
         self.targets = None
         
+        self.num_labels = None
+        self.label_names = None
+        
         self.transforms_inputs = []
         self.transforms_targets = []
     
@@ -70,14 +73,14 @@ class Dataset(ABC):
             val_subset = SubDataset(self, val_idxs)
             test_subset = SubDataset(self, test_idxs)
             
-            print(f"Total samples: {len(idxs)}, Train: {len(train_subset)}, Val: {len(val_subset)}, Test: {len(test_subset)}")
+            print(f"[SPLIT] Total samples: {len(idxs)}, Train: {len(train_subset)}, Val: {len(val_subset)}, Test: {len(test_subset)}")
             
             return train_subset, val_subset, test_subset
         else:
             val_idxs = idxs[split_idx:]
             val_subset = SubDataset(self, val_idxs)
             
-            print(f"Total samples: {len(idxs)}, Train: {len(train_subset)}, Val: {len(val_subset)}")
+            print(f"[SPLIT] Total samples: {len(idxs)}, Train: {len(train_subset)}, Val: {len(val_subset)}")
             
             return train_subset, val_subset
     
