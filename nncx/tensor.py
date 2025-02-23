@@ -50,6 +50,11 @@ class Tensor:
             return self.backend.array_equal(self.data, other.data)
         return False
     
+    
+    def __getitem__(self, idx):
+        return Tensor(self.data[idx], dtype=self.dtype, backend=self.backend, grad_en=self.grad_en)
+    
+    
     def _zero_grad(self):
         if self.grad_en:
             self.grad = self.backend.zeros(self.data.shape, self.dtype)
