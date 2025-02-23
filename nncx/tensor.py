@@ -215,6 +215,16 @@ class Tensor:
             out._prev = [self]
         
         return out
+    
+    
+    def argmax(self, axis=None):
+        out = Tensor(self.backend.argmax(self.data, axis=axis), 
+                     dtype=self.dtype,
+                     backend=self.backend, 
+                     grad_en=False
+                     )
+        
+        return out
 
     
     def __neg__(self):

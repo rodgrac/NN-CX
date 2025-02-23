@@ -23,5 +23,5 @@ class Classifier(Model):
     def predict(self, x):
         with Tensor.no_grad():
             x = self.forward(x)
-            return x.backend.argmax(x, axis=-1)
+            return x.argmax(axis=-1)
         
