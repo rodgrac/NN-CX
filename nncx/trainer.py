@@ -40,15 +40,21 @@ def evaluate(model, loss_fn, dataloader):
     
     model.eval()
     
-    test_loss = 0                        
+    preds_all = []
+    targets_all = [] 
+    test_loss = 0    
     for inputs, targets in dataloader['test']:
         with Tensor.no_grad():        
             preds = model(inputs)
             loss = loss_fn(preds, targets)
         
-            test_loss += float(loss.detach().data)
+        test_loss += float(loss.detach().data)
         
+        preds_all.extend(preds.get())
+        targets_all.extend(targets.get())
                                     
     test_loss /= len(dataloader['test'])
     
     print(f"Test loss: {test_loss:.4f}")
+    
+    return preds_all, targets_all
