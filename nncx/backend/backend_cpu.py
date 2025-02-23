@@ -58,7 +58,7 @@ class CPUBackend(Backend):
         return np.add(a, b)
     
     def mul(self, a, b):
-        return np.mul(a, b)
+        return np.multiply(a, b)
         
     def exp(self, x):
         return np.exp(x)
