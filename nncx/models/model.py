@@ -31,6 +31,11 @@ class Model(ABC):
     def __call__(self, x) -> Any:
         return self.forward(x)
     
+    
+    def predict(self, x):
+        return self.forward(x)
+    
+    
     def parameters(self):
         self._modelparams.clear()
         self._collect_params()

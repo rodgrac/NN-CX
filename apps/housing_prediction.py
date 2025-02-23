@@ -1,5 +1,5 @@
 from nncx.backend.utils import init_backend
-from nncx.datasets.california_housing import Dataset, CaliforniaHousing
+from nncx.datasets.california_housing import CaliforniaHousing
 from nncx.datasets.transform import Standardize
 from nncx.dataloader import DataLoader
 from nncx.enums import BackendType
