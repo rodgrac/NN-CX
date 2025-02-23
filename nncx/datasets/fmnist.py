@@ -11,6 +11,7 @@ class FashionMNISTTrain(Dataset):
         super().__init__()
         self.name = 'FashionMNISTTrain'
         self.num_labels = 10
+        self.label_names = ["T-shirt", "Trouser", "Pullover", "Dress", "Coat", "Sandal", "Shirt", "Sneaker", "Bag", "Ankle Boot"]
         
         self.download_url = {
             'inputs': 'http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/train-images-idx3-ubyte.gz',
@@ -34,14 +35,16 @@ class FashionMNISTTest(Dataset):
     def __init__(self):
         super().__init__()
         self.name = 'FashionMNISTTest'
+        self.num_labels = 10
+        self.label_names = ["T-shirt", "Trouser", "Pullover", "Dress", "Coat", "Sandal", "Shirt", "Sneaker", "Bag", "Ankle Boot"]
+
         self.download_url = {
             'inputs': 'http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/t10k-images-idx3-ubyte.gz',
             'labels': 'http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/t10k-labels-idx1-ubyte.gz'
         }
         
-        if not os.path.exists(os.path.join(self.datasets_root, self.name)):
-            for url in self.download_url.values():
-                download_tar_extract(url, self.datasets_root, extract=False)
+        for url in self.download_url.values():
+            download_tar_extract(url, self.datasets_root, extract=False)
                 
         with gzip.open(os.path.join(self.datasets_root, self.download_url['inputs'].split('/')[-1]), 'rb') as f:
             f.read(16)
