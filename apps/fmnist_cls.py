@@ -6,13 +6,15 @@ from nncx.models.classifier import Classifier
 from nncx.losses import CrossEntropyLoss
 from nncx.optimizers import SGD
 from nncx.trainer import train, evaluate
+from nncx.metrics import ClassificationMetrics
+from nncx.visualizer import plot_confusion_matrix
 from nncx.enums import BackendType
 
 if __name__ == '__main__':
-    do_train = True
-    batch_size = 256
+    do_train = False
+    batch_size = 32
     
-    backend = init_backend(BackendType.GPU)
+    backend = init_backend(BackendType.CPU)
     
     train_ds = FashionMNISTTrain()
     val_test_ds = FashionMNISTTest()
@@ -35,7 +37,7 @@ if __name__ == '__main__':
     loss_fn = CrossEntropyLoss()
     
     if do_train:
-        opt = SGD(model.parameters(), lr=0.001)
+        opt = SGD(model.parameters(), lr=0.005)
         train(model, loss_fn, opt, dl, 25)
         
         model.save_parameters('weights/fmnist_cls.npz')
@@ -44,4 +46,16 @@ if __name__ == '__main__':
         model.load_parameters('weights/fmnist_cls.npz')
     
     preds, targets = evaluate(model, loss_fn, dl)
+    
+    cls_metrics = ClassificationMetrics()
+    
+    cls_metrics.accuracy(preds, targets)
+    cls_metrics.precision_recall_f1(preds, targets, num_classes=val_test_ds.num_labels)
+    
+    plot_confusion_matrix(preds, targets, num_classes=val_test_ds.num_labels, class_names=val_test_ds.label_names)
+    
+    
+    
+    
+    
     
