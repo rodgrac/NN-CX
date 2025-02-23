@@ -43,10 +43,10 @@ class Dataset(ABC):
         self.transforms_inputs = transforms_inputs
         self.transforms_targets = transforms_targets
         
-    def get_input_stats(self, stats='minmax', axis=-1):
+    def get_input_stats(self, stats='min-max', axis=-1):
         return get_stats(self.inputs, stats, axis=axis)
     
-    def get_target_stats(self, stats='minmax', axis=-1):
+    def get_target_stats(self, stats='min-max', axis=-1):
         return get_stats(self.targets, stats, axis=axis)
     
     
@@ -112,10 +112,10 @@ class SubDataset:
         self.transforms_inputs = transforms_inputs
         self.transforms_targets = transforms_targets
         
-    def get_input_stats(self, stats='minmax', axis=None):
+    def get_input_stats(self, stats='min-max', axis=None):
         return get_stats(self.dataset.inputs, stats, self.indices, axis=axis)
     
-    def get_target_stats(self, stats='minmax', axis=None):
+    def get_target_stats(self, stats='min-max', axis=None):
         return get_stats(self.dataset.targets, stats, self.indices, axis=axis)
         
         
