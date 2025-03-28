@@ -31,7 +31,7 @@ def train(model, loss_fn, optimizer, dataloader, epochs):
                                             
             epoch_loss[split] /= len(dataloader[split])
         
-        print(f"Epoch {epoch} => Train loss: {epoch_loss['train']:.4f}, Val loss: {epoch_loss['val']:.4f}")
+        print(f"[Trainer] Epoch {epoch} => Train loss: {epoch_loss['train']:.4f}, Val loss: {epoch_loss['val']:.4f}")
             
 
 @timeit
@@ -55,6 +55,6 @@ def evaluate(model, loss_fn, dataloader):
                                     
     test_loss /= len(dataloader['test'])
     
-    print(f"Test loss: {test_loss:.4f}")
+    print(f"[Trainer] Test loss: {test_loss:.4f}")
     
     return preds_all, targets_all

@@ -10,7 +10,7 @@ from nncx.trainer import train, evaluate
 from nncx.visualizer import plot_predictions_targets
 
 if __name__ == '__main__':
-    do_train = True
+    do_train = False
     
     backend = init_backend(BackendType.CPU)
     
