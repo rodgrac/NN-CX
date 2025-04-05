@@ -12,7 +12,7 @@ class FashionMNISTTrain(Dataset):
         self.name = 'FashionMNISTTrain'
         self.num_labels = 10
         self.label_names = ["T-shirt", "Trouser", "Pullover", "Dress", "Coat", "Sandal", "Shirt", "Sneaker", "Bag", "Ankle Boot"]
-        self.image_size = (28, 28, 1)
+        self.image_size = (28, 28)
         
         self.download_url = {
             'inputs': 'http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/train-images-idx3-ubyte.gz',
@@ -24,7 +24,7 @@ class FashionMNISTTrain(Dataset):
                 
         with gzip.open(os.path.join(self.datasets_root, self.download_url['inputs'].split('/')[-1]), 'rb') as f:
             f.read(16)
-            self.inputs = np.frombuffer(f.read(), dtype=np.uint8).reshape(-1, 28, 28)
+            self.inputs = np.frombuffer(f.read(), dtype=np.uint8).reshape((-1,) + self.image_size)
             
         with gzip.open(os.path.join(self.datasets_root, self.download_url['labels'].split('/')[-1]), 'rb') as f:
             f.read(8)
@@ -50,7 +50,7 @@ class FashionMNISTTest(Dataset):
                 
         with gzip.open(os.path.join(self.datasets_root, self.download_url['inputs'].split('/')[-1]), 'rb') as f:
             f.read(16)
-            self.inputs = np.frombuffer(f.read(), dtype=np.uint8).reshape(-1, 28, 28)
+            self.inputs = np.frombuffer(f.read(), dtype=np.uint8).reshape((-1,) + self.image_size)
             
         with gzip.open(os.path.join(self.datasets_root, self.download_url['labels'].split('/')[-1]), 'rb') as f:
             f.read(8)
