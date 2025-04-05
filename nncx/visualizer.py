@@ -1,7 +1,28 @@
+import random
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from typing import List
+
+
+def view_image_dataset(dataset, grid_size=(5, 5)):
+    fig, axs = plt.subplots(*grid_size, figsize=(8, 8))
+    axs = axs.flatten()
+    
+    idxs = random.sample(range(len(dataset)), k=grid_size[0] * grid_size[1])
+        
+    for i in range(len(idxs)):
+        img = dataset.inputs[idxs[i]]
+        if img.ndim == 1:   # Flattened
+            img = img.reshape(dataset.image_size)
+        else:
+            img = img.transpose(1, 2, 0)    # HWC
+        axs[i].imshow(img)
+        axs[i].axis('off')
+        axs[i].set_title(dataset.label_names[dataset.targets[idxs[i]]], fontsize=8)
+    
+    plt.tight_layout()
+    plt.show()
 
 
 def plot_predictions_targets(preds, targets, title='', xlabel='Targets', ylabel='Predictions'):
