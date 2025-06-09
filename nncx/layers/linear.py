@@ -5,7 +5,7 @@ from nncx.tensor import Tensor
 class Linear:
     def __init__(self, in_features, out_features, backend, bias=True) -> None:
         self.w = Tensor(shape=(in_features, out_features), backend=backend, grad_en=True).randn()
-        self.w.data *= (2.0**0.5 / in_features)
+        self.w.data *= (2.0 / in_features)**0.5
          
         if bias:
             self.bias = Tensor(shape=(1, out_features), backend=backend, grad_en=True)

@@ -24,14 +24,12 @@ class GPUBackend(Backend):
     def full(self, shape, value, dtype):
         return cp.full(shape, value, dtype=dtype)
     
-    def rand(self, data, min_val, max_val):
-        if data.dtype == cp.int32:
-            data[:] = cp.random.randint(min_val, max_val + 1, data.shape, dtype=cp.int32)
-        elif data.dtype == cp.float32:
-            data[:] = cp.random.uniform(min_val, max_val, data.shape).astype(cp.float32)
-            
-        return data
-    
+    def rand(self, shape, dtype, min_val, max_val):
+        if dtype == DataType.INT32:
+            return cp.random.randint(min_val, max_val + 1, shape, dtype=cp.int32)
+        elif dtype == DataType.FLOAT32:
+            return cp.random.uniform(min_val, max_val, shape).astype(cp.float32)
+                
     def randn(self, shape):
         return cp.random.randn(*shape)
     
@@ -76,6 +74,9 @@ class GPUBackend(Backend):
     
     def diagflat(self, x):
         return cp.diagflat(x)
+    
+    def pad(self, x, pad_width, mode="constant"):
+        return cp.pad(x, pad_width, mode)
     
     def __repr__(self):
         return BackendType.GPU

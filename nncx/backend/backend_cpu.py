@@ -22,13 +22,12 @@ class CPUBackend(Backend):
     def full(self, shape, value, dtype):
         return np.full(shape, value, dtype=dtype)
     
-    def rand(self, data, min_val, max_val):
-        if data.dtype == np.int32:
-            data[:] = np.random.randint(min_val, max_val + 1, data.shape, dtype=np.int32)
-        elif data.dtype == np.float32:
-            data[:] = np.random.uniform(min_val, max_val, data.shape).astype(np.float32)
+    def rand(self, shape, dtype, min_val, max_val):
+        if dtype == DataType.INT32:
+            return np.random.randint(min_val, max_val + 1, shape, dtype=np.int32)
+        elif dtype == DataType.FLOAT32:
+            return np.random.uniform(min_val, max_val, shape).astype(np.float32)
             
-        return data
     
     def randn(self, shape):
         return np.random.randn(*shape)
@@ -74,6 +73,9 @@ class CPUBackend(Backend):
     
     def diagflat(self, x):
         return np.diagflat(x)
+    
+    def pad(self, x, pad_width, mode="constant"):
+        return np.pad(x, pad_width, mode)
     
     def __repr__(self):
         return BackendType.CPU

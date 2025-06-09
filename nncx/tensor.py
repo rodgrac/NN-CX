@@ -254,7 +254,9 @@ class Tensor:
         return self**-1 * other
     
     def rand(self, min_val, max_val):        
-        return self.backend.rand(self.data, min_val, max_val)
+        self.data[:] = self.backend.rand(self.shape, self.dtype, min_val, max_val)
+        
+        return self
     
     def randn(self):
         assert self.dtype == DataType.FLOAT32, "Data type needs to be float"
