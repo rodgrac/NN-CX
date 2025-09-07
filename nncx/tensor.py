@@ -208,6 +208,25 @@ class Tensor:
         return out
     
     
+    def transpose(self, *axes):
+        out = Tensor(self.data.transpose(*axes), 
+                     dtype=self.dtype,
+                     backend=self.backend, 
+                     grad_en=self.grad_en
+                    )
+        
+        if out.grad_en:
+            if not len(axes):
+                axes = tuple(range(self.ndims))[::-1]
+            out.grad_fn = lambda grad: [grad.transpose(self.backend.argsort(axes))]
+            out._prev = [self]
+            
+        return out
+    
+    @property
+    def T(self):
+        return self.transpose()
+    
     def exp(self):
         out = Tensor(self.backend.exp(self.data), 
                      dtype=self.dtype,

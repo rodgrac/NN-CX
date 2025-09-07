@@ -20,7 +20,7 @@ class CPUBackend(Backend):
         return np.zeros(shape, dtype=self.dtype_map[dtype])
     
     def full(self, shape, value, dtype):
-        return np.full(shape, value, dtype=dtype)
+        return np.full(shape, value, dtype=self.dtype_map[dtype])        
     
     def rand(self, shape, dtype, min_val, max_val):
         if dtype == DataType.INT32:
@@ -37,6 +37,9 @@ class CPUBackend(Backend):
     
     def moveaxis(self, x, src_axis, dest_axis):
         return np.moveaxis(x, src_axis, dest_axis)
+    
+    def argsort(self, x):
+        return np.argsort(x)
     
     def expand_dims(self, x, axis):
         return np.expand_dims(x, axis=axis)

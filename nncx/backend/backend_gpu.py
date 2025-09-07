@@ -22,7 +22,7 @@ class GPUBackend(Backend):
         return cp.zeros(shape, dtype=self.dtype_map[dtype])
     
     def full(self, shape, value, dtype):
-        return cp.full(shape, value, dtype=dtype)
+        return cp.full(shape, value, dtype=self.dtype_map[dtype])
     
     def rand(self, shape, dtype, min_val, max_val):
         if dtype == DataType.INT32:
@@ -38,6 +38,9 @@ class GPUBackend(Backend):
     
     def moveaxis(self, x, src_axis, dest_axis):
         return cp.moveaxis(x, src_axis, dest_axis)
+    
+    def argsort(self, x):
+        return cp.argsort(x)
     
     def expand_dims(self, x, axis):
         return cp.expand_dims(x, axis=axis)
