@@ -38,6 +38,9 @@ class CPUBackend(Backend):
     def moveaxis(self, x, src_axis, dest_axis):
         return np.moveaxis(x, src_axis, dest_axis)
     
+    def arange(self, x):
+        return np.arange(x)
+    
     def argsort(self, x):
         return np.argsort(x)
     
@@ -52,6 +55,9 @@ class CPUBackend(Backend):
     
     def matmul(self, a, b):
         return np.matmul(a, b)
+    
+    def einsum(self, subscript, inputs):
+        return np.einsum(subscript, *inputs)
     
     def sum(self, x, axis=None, keepdims=False):
         return np.sum(x, axis=axis, keepdims=keepdims)

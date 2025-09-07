@@ -10,6 +10,8 @@ class GPUBackend(Backend):
         print('CuPy version:', cp.__version__)
         print('CUDA version:', cp.cuda.runtime.runtimeGetVersion())
         
+        cp.cuda.Device(0).use()
+        
         self.dtype_map = {
             DataType.FLOAT32 : cp.float32,
             DataType.INT32 : cp.int32
@@ -39,8 +41,11 @@ class GPUBackend(Backend):
     def moveaxis(self, x, src_axis, dest_axis):
         return cp.moveaxis(x, src_axis, dest_axis)
     
+    def arange(self, x):
+        return cp.arange(x)
+    
     def argsort(self, x):
-        return cp.argsort(x)
+        return cp.argsort(cp.asarray(x))
     
     def expand_dims(self, x, axis):
         return cp.expand_dims(x, axis=axis)
@@ -53,6 +58,9 @@ class GPUBackend(Backend):
     
     def matmul(self, a, b):
         return cp.matmul(a, b)
+    
+    def einsum(self, subscript, inputs):
+        return cp.einsum(subscript, *inputs)
     
     def sum(self, x, axis=None, keepdims=False):
         return cp.sum(x, axis=axis, keepdims=keepdims)

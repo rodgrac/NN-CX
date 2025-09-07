@@ -1,6 +1,7 @@
 import copy
 import uuid
 import numpy as np
+from typing import Tuple
 
 from nncx import utils
 from nncx.backend.utils import get_backend_type
@@ -69,9 +70,15 @@ class Tensor:
                 
         return ndims
     
+    def _update_attrs(self):
+        self.shape = self.data.shape
+        self.size = self.data.size
+        self.ndims = self._ndims()
+        
+    
     def backward(self, grad=None):
         if grad is None:  
-            grad = self.backend.full(self.data.shape, 1.0, self.backend.dtype_map[self.dtype])       
+            grad = self.backend.full(self.data.shape, 1.0, self.dtype)       
         self.grad = grad
                 
         sorted_tensors = utils.topo_sort(self)
@@ -101,7 +108,7 @@ class Tensor:
         
         for ax, (val1, val2) in enumerate(zip(tensor.shape, grad_acc.shape[dims_ex:])):
             if val1 != val2:
-                assert val1 == 1, "Shape mismatch for reduced gradient update"
+                assert val1 == 1, f"Shape mismatch for reduced gradient update => ({tensor.shape}), ({grad_acc.shape[dims_ex:]})"
                 axes.append(ax + dims_ex)
         return tuple(axes)
             
@@ -120,6 +127,20 @@ class Tensor:
             return self.data.get()
         else:
             return self.data
+        
+    def reshape(self, shape: Tuple):
+        out = Tensor(self.data.reshape(*shape),
+                     dtype=self.dtype, 
+                     backend=self.backend,
+                     grad_en=self.grad_en
+                    )
+
+        if out.grad_en:
+            out.grad_fn = lambda grad: [grad.reshape(self.data.shape)]
+            out._prev = [self]
+        
+        return out
+    
     
     def __add__(self, other):
         if not isinstance(other, Tensor):
@@ -218,7 +239,7 @@ class Tensor:
         if out.grad_en:
             if not len(axes):
                 axes = tuple(range(self.ndims))[::-1]
-            out.grad_fn = lambda grad: [grad.transpose(self.backend.argsort(axes))]
+            out.grad_fn = lambda grad: [grad.transpose(tuple(self.backend.argsort(axes).tolist()))]
             out._prev = [self]
             
         return out
@@ -293,6 +314,7 @@ class Tensor:
         out_data = [t.data for t in tensors]
         out = Tensor(tensors[0].backend.stack(out_data, axis=axis), 
                      backend=tensors[0].backend, 
+                     dtype=tensors[0].dtype,
                      grad_en=np.any([t.grad_en for t in tensors]))
         
         if out.grad_en:
