@@ -1,3 +1,5 @@
+from tqdm import tqdm
+
 from nncx.tensor import Tensor
 from nncx.utils import timeit
 
@@ -16,7 +18,7 @@ def train(model, loss_fn, optimizer, dataloader, epochs):
             else:
                 model.eval()
                                 
-            for inputs, targets in dataloader[split]:
+            for inputs, targets in tqdm(dataloader[split]):
                 with Tensor.no_grad(split == 'val'):        # Apply no_grad only when split is val
                     preds = model(inputs)
                     loss = loss_fn(preds, targets)
@@ -43,7 +45,7 @@ def evaluate(model, loss_fn, dataloader):
     preds_all = []
     targets_all = [] 
     test_loss = 0    
-    for inputs, targets in dataloader['test']:
+    for inputs, targets in tqdm(dataloader['test']):
         with Tensor.no_grad():        
             preds = model(inputs)
             loss = loss_fn(preds, targets)

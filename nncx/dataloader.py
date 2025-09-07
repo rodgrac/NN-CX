@@ -10,8 +10,9 @@ class DataLoader:
         self.batch_size = batch_size
         self.shuffle = shuffle
         
-    def __iter__(self):
         self.idxs = np.arange(len(self.dataset))
+        
+    def __iter__(self):
         if self.shuffle:
             np.random.shuffle(self.idxs)
             

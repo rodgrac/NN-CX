@@ -4,6 +4,7 @@ import numpy as np
 
 from nncx.config import PROJECT_ROOT
 from nncx.tensor import Tensor
+from nncx.enums import DataType
 
 class Dataset(ABC):
     def __init__(self):
@@ -37,9 +38,12 @@ class Dataset(ABC):
             
         for transform in self.transforms_targets:
             target_item = transform(target_item)
+            
+        data_dtype = DataType.FLOAT32 if np.issubdtype(data_item.dtype, np.floating) else DataType.INT32
+        target_dtype = DataType.FLOAT32 if np.issubdtype(target_item.dtype, np.floating) else DataType.INT32
         
-        return Tensor(data_item, backend=backend, grad_en=True), \
-                Tensor(target_item, backend=backend)
+        return Tensor(data_item, backend=backend, dtype=data_dtype, grad_en=True), \
+                Tensor(target_item, backend=backend, dtype=target_dtype)
         
         
     def set_transforms(self, transforms_inputs, transforms_targets=[]):

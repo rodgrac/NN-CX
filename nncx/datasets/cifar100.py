@@ -27,7 +27,11 @@ class CIFAR100Train(Dataset):
             self.label_names = metadata['fine_label_names']
         else:
             self.targets = np.asarray(batch[b"coarse_labels"])
-            self.label_names = metadata['coarse_label_names']            
+            self.label_names = metadata['coarse_label_names']  
+            
+        self.num_labels = len(self.label_names)  
+        self.data_mean = [0.5071, 0.4865, 0.4409]
+        self.data_std = [0.2673, 0.2564, 0.2762]      
 
 
 class CIFAR100Test(Dataset):
@@ -42,7 +46,7 @@ class CIFAR100Test(Dataset):
         
         with open(os.path.join(self.datasets_root, self.download_url.split('/')[-1].split('.')[0], 'test'), "rb") as fp:
             batch = pickle.load(fp, encoding='bytes')
-        self.inputs = np.asarray(batch[b"data"], dtype=np.uint8).reshape((-1,) + self.image_size)
+        self.inputs = np.asarray(batch[b"data"], dtype=np.uint8).reshape((-1,) + self.image_size).transpose(0, 3, 1, 2) # CIFAR test split is in NHWC
         
         with open(os.path.join(self.datasets_root, self.download_url.split('/')[-1].split('.')[0], 'meta'), "rb") as fp:
             metadata = pickle.load(fp, encoding='latin1')
@@ -53,3 +57,7 @@ class CIFAR100Test(Dataset):
         else:
             self.targets = np.asarray(batch[b"coarse_labels"])
             self.label_names = metadata['coarse_label_names']
+            
+        self.num_labels = len(self.label_names)   
+        self.data_mean = [0.5071, 0.4865, 0.4409]
+        self.data_std = [0.2673, 0.2564, 0.2762]      
