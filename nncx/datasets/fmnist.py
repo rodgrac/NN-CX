@@ -12,7 +12,7 @@ class FashionMNISTTrain(Dataset):
         self.name = 'FashionMNISTTrain'
         self.num_labels = 10
         self.label_names = ["T-shirt", "Trouser", "Pullover", "Dress", "Coat", "Sandal", "Shirt", "Sneaker", "Bag", "Ankle Boot"]
-        self.image_size = (28, 28)
+        self.image_size = (1, 28, 28)
         
         self.download_url = {
             'inputs': 'http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/train-images-idx3-ubyte.gz',
@@ -38,7 +38,7 @@ class FashionMNISTTest(Dataset):
         self.name = 'FashionMNISTTest'
         self.num_labels = 10
         self.label_names = ["T-shirt", "Trouser", "Pullover", "Dress", "Coat", "Sandal", "Shirt", "Sneaker", "Bag", "Ankle Boot"]
-        self.image_size = (28, 28, 1)
+        self.image_size = (1, 28, 28)
 
         self.download_url = {
             'inputs': 'http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/t10k-images-idx3-ubyte.gz',

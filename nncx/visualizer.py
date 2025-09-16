@@ -59,7 +59,7 @@ def plot_confusion_matrix(preds, targets, num_classes, class_names):
         
     plt.figure(figsize=(10, 8))
     print('[Viz] Plotting confusion matrix...')
-    sns.heatmap(cm, annot=True, fmt='d', cmap="Blues", xticklabels=class_names, yticklabels=class_names)
+    sns.heatmap(cm, fmt='d', cmap="Blues", xticklabels=class_names, yticklabels=class_names)
     plt.xlabel('Predicted class')
     plt.ylabel('Actual class')
     plt.title('Confusion Matrix') 
@@ -85,8 +85,15 @@ def visualize_predictions(model, dataloader, num_samples=9):
     
     plt.figure(figsize=(grid_size * 2, grid_size * 2))
     for i, idx in enumerate(idxs):
+        img = inputs_s[i].reshape(dataloader.dataset.image_size)
+        
+        # Invert any transforms
+        for transform in dataloader.dataset.transforms_inputs[::-1]:    # Reverse transform order
+            if hasattr(transform, 'invert') and  callable(getattr(transform, 'invert')):
+                img = transform.invert(img)
+        
         plt.subplot(grid_size, grid_size, i + 1)
-        plt.imshow(inputs_s[i].reshape(dataloader.dataset.image_size))
+        plt.imshow(img.transpose(1, 2, 0))   # HWC
         plt.axis('off')
         plt.title(f"Pred: {dataloader.dataset.label_names[int(preds_s[i])]}\nTrue: {dataloader.dataset.label_names[int(targets_s[i])]}", 
                   fontsize=10, color='green' if preds_s[i] == targets_s[i] else 'red')

@@ -38,7 +38,7 @@ class CIFAR100Test(Dataset):
     def __init__(self, label_type='fine'):
         super().__init__()
         self.name = 'CIFAR100Test'
-        self.image_size = (32, 32, 3)
+        self.image_size = (3, 32, 32)
         
         self.download_url = "https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz"
         
@@ -46,7 +46,7 @@ class CIFAR100Test(Dataset):
         
         with open(os.path.join(self.datasets_root, self.download_url.split('/')[-1].split('.')[0], 'test'), "rb") as fp:
             batch = pickle.load(fp, encoding='bytes')
-        self.inputs = np.asarray(batch[b"data"], dtype=np.uint8).reshape((-1,) + self.image_size).transpose(0, 3, 1, 2) # CIFAR test split is in NHWC
+        self.inputs = np.asarray(batch[b"data"], dtype=np.uint8).reshape((-1,) + self.image_size)
         
         with open(os.path.join(self.datasets_root, self.download_url.split('/')[-1].split('.')[0], 'meta'), "rb") as fp:
             metadata = pickle.load(fp, encoding='latin1')
