@@ -6,15 +6,21 @@ class ImageClassifier(Model):
         super().__init__(backend)
         
         self.features = Sequential(
-            Conv2d(3, 16, backend, kernel_size=3, stride=1, pad=True),
+            Conv2d(3, 64, backend, kernel_size=3, stride=1, pad=True),
             ReLU(),
             MaxPool2d(backend, kernel_size=2, stride=2),
-            Conv2d(16, 32, backend, kernel_size=3, stride=1, pad=True),
+            Conv2d(64, 128, backend, kernel_size=3, stride=1, pad=True),
             ReLU(),
             MaxPool2d(backend, kernel_size=2, stride=2),
+            Conv2d(128, 256, backend, kernel_size=3, stride=1, pad=True),
+            ReLU(),
         )
             
-        self.fc = Linear(out_features, num_classes, backend)
+        self.fc = Sequential(
+            Linear(out_features, 512, backend),
+            ReLU(),
+            Linear(512, num_classes, backend)
+        )
         
     def forward(self, x):
         b, *_ = x.shape
