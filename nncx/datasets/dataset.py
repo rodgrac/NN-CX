@@ -107,14 +107,18 @@ class SubDataset:
     def __getitem__(self, key):
         idx, backend = key
         
+        # Save any existing dataset transform to restore later
+        orig_ds_transforms_inputs = self.dataset.transforms_inputs
+        orig_ds_transforms_targets = self.dataset.transforms_targets
+        
+        self.dataset.transforms_inputs = self.transforms_inputs
+        self.dataset.transforms_targets = self.transforms_targets
+        
         data_item, target_item = self.dataset[(self.indices[idx], backend)]
         
-        with Tensor.no_grad():
-            for transform in self.transforms_inputs:
-                data_item = transform(data_item)
-            
-            for transform in self.transforms_targets:
-                target_item = transform(target_item)
+        # Restore orig transform
+        self.dataset.transforms_inputs = orig_ds_transforms_inputs
+        self.dataset.transforms_targets = orig_ds_transforms_targets
             
         return data_item, target_item
         
