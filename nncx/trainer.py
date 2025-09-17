@@ -4,7 +4,7 @@ from nncx.tensor import Tensor
 from nncx.utils import timeit
 
 @timeit
-def train(model, loss_fn, optimizer, dataloader, epochs):
+def train(model, loss_fn, optimizer, dataloader, epochs, sched=None):
     assert type(model.backend) == type(dataloader['train'].backend), "Model and data need to be of same backend type!"
     
     for epoch in range(epochs):
@@ -30,10 +30,12 @@ def train(model, loss_fn, optimizer, dataloader, epochs):
                     loss.backward()
                                         
                     optimizer.step()
+                    if sched is not None:
+                        sched.step()
                                             
             epoch_loss[split] /= len(dataloader[split])
         
-        print(f"[Trainer] Epoch {epoch} => Train loss: {epoch_loss['train']:.4f}, Val loss: {epoch_loss['val']:.4f}")
+        print(f"[Trainer] Epoch {epoch} LR={optimizer.lr} => Train loss: {epoch_loss['train']:.4f}, Val loss: {epoch_loss['val']:.4f}")
             
 
 @timeit
