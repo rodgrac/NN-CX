@@ -30,10 +30,11 @@ def train(model, loss_fn, optimizer, dataloader, epochs, sched=None):
                     loss.backward()
                                         
                     optimizer.step()
-                    if sched is not None:
-                        sched.step()
-                                            
+                                                                    
             epoch_loss[split] /= len(dataloader[split])
+            
+        if sched is not None:
+            sched.step()
         
         print(f"[Trainer] Epoch {epoch}; LR={optimizer.lr:.4f} => Train loss: {epoch_loss['train']:.4f}, Val loss: {epoch_loss['val']:.4f}")
             
