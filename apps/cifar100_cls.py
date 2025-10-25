@@ -5,6 +5,7 @@ from nncx.datasets import transform
 from nncx.models.image_classifier import ImageClassifier
 from nncx.losses import CrossEntropyLoss
 from nncx.optimizers import SGD
+from nncx import schedulers
 from nncx.trainer import train, evaluate
 from nncx.metrics import ClassificationMetrics
 from nncx.enums import BackendType
@@ -14,7 +15,8 @@ import nncx.visualizer as viz
 if __name__ == '__main__':
     do_train = True
     batch_size = 512
-    epochs = 10
+    epochs = 25
+    lr = 0.05
     
     backend = init_backend(BackendType.GPU)
     
@@ -24,10 +26,12 @@ if __name__ == '__main__':
         
     viz.view_image_dataset(train_ds)
     
-    train_transforms_x = [transform.RandomCrop(size=32, padding=4),
-                          transform.RandomHorizontalFlip(p=0.5),
-                          transform.Normalize(min_val=0, max_val=255.0), 
-                          transform.Standardize(test_ds.data_mean, test_ds.data_std)]
+    train_transforms_x = [
+        transform.RandomCrop(size=32, padding=4),
+        transform.RandomHorizontalFlip(p=0.5),
+        transform.Normalize(min_val=0, max_val=255.0), 
+        transform.Standardize(test_ds.data_mean, test_ds.data_std)
+    ]
     
     val_test_transforms_x = [transform.Normalize(min_val=0, max_val=255.0), 
                              transform.Standardize(test_ds.data_mean, test_ds.data_std)]
@@ -48,8 +52,9 @@ if __name__ == '__main__':
     loss_fn = CrossEntropyLoss()
     
     if do_train:
-        opt = SGD(backend, model.parameters(), lr=0.05, momentum=0.9)
-        train(model, loss_fn, opt, dl, epochs)
+        opt = SGD(backend, model.parameters(), lr=lr, momentum=0.9)
+        sched = schedulers.CosineAnnealingLR(opt, T_max=epochs)
+        train(model, loss_fn, opt, dl, epochs, sched=sched)
         
         model.save_parameters('weights/cifar100_cls.npz')
     else:

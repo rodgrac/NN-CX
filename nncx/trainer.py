@@ -35,7 +35,7 @@ def train(model, loss_fn, optimizer, dataloader, epochs, sched=None):
                                             
             epoch_loss[split] /= len(dataloader[split])
         
-        print(f"[Trainer] Epoch {epoch} LR={optimizer.lr} => Train loss: {epoch_loss['train']:.4f}, Val loss: {epoch_loss['val']:.4f}")
+        print(f"[Trainer] Epoch {epoch}; LR={optimizer.lr:.4f} => Train loss: {epoch_loss['train']:.4f}, Val loss: {epoch_loss['val']:.4f}")
             
 
 @timeit
