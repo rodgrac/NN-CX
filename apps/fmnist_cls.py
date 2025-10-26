@@ -18,7 +18,7 @@ if __name__ == '__main__':
     
     train_ds = FashionMNISTTrain()
     val_test_ds = FashionMNISTTest()
-    _, val_ds, test_ds = val_test_ds.split(train_ratio=0, shuffle=True, test_set=True, seed=42)
+    _, val_ds, test_ds = val_test_ds.split_dataset(train_ratio=0, shuffle=True, test_set=True, seed=42)
     
     transform_x = [Normalize(min_val=0, max_val=255.0), Flatten()]
     transform_y = [OneHotEncode(train_ds.num_labels)]

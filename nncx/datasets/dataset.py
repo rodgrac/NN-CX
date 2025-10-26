@@ -1,12 +1,17 @@
 import os
 from abc import ABC, abstractmethod
 import numpy as np
+from enum import Enum
 
 from nncx.config import PROJECT_ROOT
 from nncx.tensor import Tensor
 from nncx.enums import DataType
 
 class Dataset(ABC):
+    class TargetType(Enum):
+        ONE_HOT = 0
+        BBOX = 1
+    
     def __init__(self):
         super().__init__()
                 
@@ -57,7 +62,7 @@ class Dataset(ABC):
         return get_stats(self.targets, stats, axis=axis)
     
     
-    def split(self, train_ratio=0.8, shuffle=True, test_set=True, seed=None):
+    def split_dataset(self, train_ratio=0.8, shuffle=True, test_set=True, seed=None):
         idxs = np.arange(len(self.inputs))
         
         if shuffle:

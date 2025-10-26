@@ -22,7 +22,7 @@ if __name__ == '__main__':
     
     train_val_ds = CIFAR100Train(label_type='fine')
     test_ds = CIFAR100Test(label_type='fine')
-    train_ds, val_ds = train_val_ds.split(test_set=False, seed=42)
+    train_ds, val_ds = train_val_ds.split_dataset(test_set=False, seed=42)
         
     viz.view_image_dataset(train_ds)
     

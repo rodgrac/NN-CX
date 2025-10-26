@@ -15,7 +15,7 @@ if __name__ == '__main__':
     backend = init_backend(BackendType.CPU)
     
     ds = CaliforniaHousing()
-    train_ds, val_ds, test_ds = ds.split(train_ratio=0.8, shuffle=True, test_set=True, seed=42)
+    train_ds, val_ds, test_ds = ds.split_dataset(train_ratio=0.8, shuffle=True, test_set=True, seed=42)
     
     train_mean_x, train_std_x = train_ds.get_input_stats('mean-std', axis=0)
     train_mean_y, train_std_y = train_ds.get_target_stats('mean-std', axis=0)

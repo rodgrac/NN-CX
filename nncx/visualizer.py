@@ -1,26 +1,38 @@
 import random
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
 import seaborn as sns
 from typing import List
 
+from nncx.datasets.dataset import Dataset
 
-def view_image_dataset(dataset, grid_size=(5, 5)):
+def view_image_dataset(dataset: Dataset, backend, grid_size=(5, 5)):
     fig, axs = plt.subplots(*grid_size, figsize=(8, 8))
     axs = axs.flatten()
     
     idxs = random.sample(range(len(dataset)), k=grid_size[0] * grid_size[1])
         
     for i in range(len(idxs)):
-        img = dataset.inputs[idxs[i]]
+        input, target = dataset[(idxs[i], backend)]
+        img = input.get()
         if img.ndim == 1:   # Flattened
             img = img.reshape(dataset.image_size)
-        else:
+        elif img.shape[0] == 3: # CHW
             img = img.transpose(1, 2, 0)    # HWC
+            
         axs[i].imshow(img)
         axs[i].axis('off')
-        axs[i].set_title(dataset.label_names[dataset.targets[idxs[i]]], fontsize=8)
-    
+        if dataset.target_type == Dataset.TargetType.ONE_HOT:
+            axs[i].set_title(dataset.label_names[target.get()], fontsize=8)
+        elif dataset.target_type == Dataset.TargetType.BBOX:
+            xc, yc, w, h = target.get()
+            H, W = img.shape[:2]
+            x = (xc - w/2) * W
+            y = (yc - h/2) * H
+            w *= W; h *= H
+            axs[i].add_patch(Rectangle((x, y), w, h, fill=False, edgecolor='red', linewidth=2))
+        
     plt.tight_layout()
     plt.show()
 
