@@ -26,6 +26,8 @@ class Dataset(ABC):
         
         self.transforms_inputs = []
         self.transforms_targets = []
+        
+        self.target_type = None
     
     
     def __len__(self):
@@ -39,7 +41,7 @@ class Dataset(ABC):
         target_item = self.targets[idx]
         
         for transform in self.transforms_inputs:
-            data_item = transform(data_item)
+            data_item, target_item = transform(data_item, target_item, self.target_type)
             
         for transform in self.transforms_targets:
             target_item = transform(target_item)
