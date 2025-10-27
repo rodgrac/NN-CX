@@ -92,3 +92,33 @@ class RandomCrop(Transform):
         
         return input_tensor[:, i : i + self.size, j : j + self.size], target_tensor
     
+
+class ResizeLetterbox(Transform):
+    def __init__(self, size):
+        super().__init__()
+        self.size = size
+        
+    def __call__(self, input_tensor, target_tensor, target_type):
+        input_tensor = input_tensor.transpose(1, 2, 0)     # CHW -> HWC
+        
+        H, W = input_tensor.shape[:2]
+        scale = self.size / max(H, W)
+        new_H, new_W = int(scale * H), int(scale * W)
+        if input_tensor.dtype == np.float32:
+            raise Exception('Cannot resize float32 tensor. Make sure to call resize before standardize/normalize.')
+        input_tensor = np.array(Image.fromarray(input_tensor).resize((new_W, new_H), resample=Image.BILINEAR)) 
+        pad_top = (self.size - new_H) // 2
+        pad_left = (self.size - new_W) // 2
+        
+        input_tensor = np.pad(input_tensor, ((pad_top, self.size - new_H - pad_top), (pad_left, self.size - new_W - pad_left), (0, 0)), mode='constant')
+        
+        if target_type == Dataset.TargetType.BBOX:
+            cx, cy, w, h = target_tensor
+            cx *= W; cy *= H; w *= W; h *= H
+            cx = (cx * scale + pad_left) / self.size
+            cy = (cy * scale + pad_top) / self.size
+            bw = w * scale / self.size
+            bh = h * scale / self.size
+            target_tensor = np.array([cx, cy, bw, bh], dtype=np.float32)
+
+        return input_tensor.transpose(2, 0, 1), target_tensor
