@@ -53,3 +53,16 @@ class ClassificationMetrics:
         print(f"[METRICS] Recall: {recall}")
         
         return precision, recall, f1
+    
+    
+class DetectionMetrics:
+    def IoU(self, a, b):  # (x1, y1, x2, y2)
+        xA = max(a[0], b[0]); yA = max(a[1], b[1])
+        xB = min(a[2], b[2]); yB = min(a[3], b[3])
+        inter = max(0, xB - xA + 1) * max(0, yB - yA + 1)
+        areaA = max(0, a[2] - a[0] + 1) * max(0, a[3] - a[1] + 1)
+        areaB = max(0, b[2] - b[0] + 1) * max(0, b[3] - b[1] + 1)
+        union = areaA + areaB - inter + 1e-9
+        
+        return inter / union
+        

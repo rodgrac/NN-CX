@@ -26,6 +26,7 @@ def view_image_dataset(dataset: Dataset, backend, grid_size=(5, 5)):
         if dataset.target_type == Dataset.TargetType.ONE_HOT:
             axs[i].set_title(dataset.label_names[target.get()], fontsize=8)
         elif dataset.target_type == Dataset.TargetType.BBOX:
+            target = target[0] if isinstance(target, tuple) else target
             xc, yc, w, h = target.get()
             H, W = img.shape[:2]
             x = (xc - w/2) * W
