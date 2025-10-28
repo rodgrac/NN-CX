@@ -18,8 +18,8 @@ class Tensor:
         self.backend = backend
         
         if data is not None:
-            if np.isscalar(data):
-                data = [[data]]
+            if np.isscalar(data):       # FIXME: don't convert to 2d tensor, keep it 1d
+                data = [[data]]     
             
             self.data = self.backend.array(data, dtype)    
             
@@ -65,9 +65,8 @@ class Tensor:
     def _ndims(self):
         ndims = 0
         for dim_val in self.shape:
-            if dim_val > 1:
-                ndims += 1
-                
+            ndims += 1
+            
         return ndims
     
     def _update_attrs(self):
@@ -235,10 +234,10 @@ class Tensor:
                      backend=self.backend, 
                      grad_en=self.grad_en
                     )
-        
+                        
         if out.grad_en:
             if not len(axes):
-                axes = tuple(range(self.ndims))[::-1]
+                axes = tuple(range(out.ndims))[::-1]
             out.grad_fn = lambda grad: [grad.transpose(tuple(self.backend.argsort(axes).tolist()))]
             out._prev = [self]
             
