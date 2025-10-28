@@ -61,3 +61,27 @@ class CosineAnnealingLR(LRScheduler):
         return self.eta_min + 0.5 * (self.base_lr - self.eta_min) * (1 + np.cos(np.pi * self.last_epoch / self.T_max))
         
     
+class WarmupLR(LRScheduler):
+    def __init__(self, opt, base_scheduler, warmup_epochs, warmup_start_lr=0.0):
+        super().__init__(opt)
+        self.base_scheduler = base_scheduler
+        self.warmup_epochs = warmup_epochs
+        self.warmup_start_lr = warmup_start_lr
+        self._finished_warmup = False
+        
+    def step(self):
+        #Warmup
+        if self.last_epoch < self.warmup_epochs:
+            self.last_epoch += 1
+            alpha = self.last_epoch / self.warmup_epochs
+            lr = self.warmup_start_lr + alpha * (self.base_lr - self.warmup_start_lr)
+            self.opt.lr = lr
+            return lr
+        
+        # After warmup
+        if not self._finished_warmup:
+            if isinstance(self.base_scheduler, CosineAnnealingLR):
+                self.base_scheduler.T_max -= self.warmup_epochs
+            self._finished_warmup = True
+        
+        return self.base_scheduler.step()

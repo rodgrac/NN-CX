@@ -33,7 +33,9 @@ if __name__ == '__main__':
     input_size = 128
     batch_size = 16
     epochs = 25
-    lr = 1e-3
+    max_lr = 1e-3
+    min_lr = 1e-5
+    warmup_epochs = 2
     
     backend = init_backend(BackendType.GPU)
     
@@ -71,8 +73,11 @@ if __name__ == '__main__':
     loss_fn = DetectionLoss()
     
     if do_train:
-        opt = SGD(backend, model.parameters(), lr=lr, momentum=0.9)
-        sched = schedulers.CosineAnnealingLR(opt, T_max=epochs)
+        opt = SGD(backend, model.parameters(), lr=max_lr, momentum=0.9)
+        
+        cosine_sched = schedulers.CosineAnnealingLR(opt, T_max=epochs, eta_min=min_lr)
+        sched = schedulers.WarmupLR(opt, cosine_sched, warmup_epochs, warmup_start_lr=min_lr)
+        
         train(model, loss_fn, opt, dl, epochs, sched=sched)
         
         model.save_parameters('weights/face_detector.npz')
