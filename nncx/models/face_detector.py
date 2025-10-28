@@ -43,5 +43,5 @@ class FaceDetector(Model):
         )
         
     def forward(self, x):
-        x = self.features(x)
-        return self.cls_head(x), self.box_head(x)
+        x = self.features(x).reshape((x.shape[0], -1))
+        return self.box_head(x), self.cls_head(x)
