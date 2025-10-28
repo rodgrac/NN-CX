@@ -17,14 +17,9 @@ class DataLoader:
             np.random.shuffle(self.idxs)
             
         for i in range(0, len(self.idxs), self.batch_size):
-            batch_inputs = []
-            batch_targets = []
-            for idx in self.idxs[i:i+self.batch_size]:
-                input_t, target_t = self.dataset[(idx, self.backend)]
-                batch_inputs.append(input_t)
-                batch_targets.append(target_t)
-                            
-            yield Tensor.stack(batch_inputs), Tensor.stack(batch_targets)
+            batch = [self.dataset[(idx, self.backend)] for idx in self.idxs[i:i+self.batch_size]]
+            
+            yield self._collate(batch)
             
     def __len__(self):
         if self.idxs is None:
@@ -32,4 +27,14 @@ class DataLoader:
         else:
             return math.ceil(len(self.idxs) / float(self.batch_size))
         
+    def _collate(self, batch):    
+        batch_tensors = []    
+        for items in zip(*batch):
+            if isinstance(items[0], (tuple, list)):
+                items = tuple(Tensor.stack([t[i] for t in items]) for i in range(len(items[0])))
+            else:
+                items = Tensor.stack(items)
+                
+            batch_tensors.append(items)
         
+        return tuple(batch_tensors)

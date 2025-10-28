@@ -88,9 +88,9 @@ class WIDERFace(Dataset):
         if isinstance(data_item, tuple):
             _, (x, y, w, h) = data_item
             img = img[y:y+h, x:x+w, :]
-            label = 0.0
+            label = [0.0]
         else:
-            label = 1.0
+            label = [1.0]
         
         x, y, w, h = target_item[0]     # For single face
       
