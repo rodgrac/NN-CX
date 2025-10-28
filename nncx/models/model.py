@@ -1,3 +1,4 @@
+import os
 from abc import ABC, abstractmethod
 from typing import Any
 
@@ -48,6 +49,8 @@ class Model(ABC):
                 self._modelparams.extend(attr._params)
         
     def save_parameters(self, save_path):
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        
         param_dict = {}
         for attr_name in dir(self):
             attr = getattr(self, attr_name)
