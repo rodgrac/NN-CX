@@ -22,6 +22,9 @@ class CPUBackend(Backend):
     def full(self, shape, value, dtype):
         return np.full(shape, value, dtype=self.dtype_map[dtype])        
     
+    def astype(self, x, dtype):
+        return x.astype(self.dtype_map[dtype])
+    
     def rand(self, shape, dtype, min_val, max_val):
         if dtype == DataType.INT32:
             return np.random.randint(min_val, max_val + 1, shape, dtype=np.int32)
@@ -62,6 +65,9 @@ class CPUBackend(Backend):
     def sum(self, x, axis=None, keepdims=False):
         return np.sum(x, axis=axis, keepdims=keepdims)
     
+    def mean(self, x, axis=None, keepdims=False):
+        return np.mean(x, axis=axis, keepdims=keepdims)
+    
     def add(self, a, b):
         return np.add(a, b)
     
@@ -77,14 +83,26 @@ class CPUBackend(Backend):
     def max(self, x, axis=None, keepdims=False):
         return np.max(x, axis=axis, keepdims=keepdims)
     
+    def maximum(self, a, b):
+        return np.maximum(a, b)
+    
     def argmax(self, x, axis=None):
         return np.argmax(x, axis=axis)
+    
+    def clip(self, x, min_val, max_val):
+        return np.clip(x, min_val, max_val)
     
     def diagflat(self, x):
         return np.diagflat(x)
     
     def pad(self, x, pad_width, mode="constant"):
         return np.pad(x, pad_width, mode)
+    
+    def abs(self, x):
+        return np.abs(x)
+    
+    def sign(self, x):
+        return np.sign(x)
     
     def __repr__(self):
         return BackendType.CPU
