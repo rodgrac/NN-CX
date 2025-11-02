@@ -24,8 +24,7 @@ class DataLoader:
         for i in range(0, len(self.idxs), self.batch_size):
             batch_idx = self.idxs[i:i+self.batch_size]
             if self.num_workers > 0:
-                with mp.Pool(self.num_workers) as pool:
-                    batch = pool.map(self.dataset.__getitem__, batch_idx)
+                batch = self._pool.map(self.dataset.__getitem__, batch_idx)
             else:
                 batch = [self.dataset[idx] for idx in batch_idx]
                 
@@ -48,30 +47,37 @@ class DataLoader:
         for batch in self._iter_batches():
             if self.backend_type is BackendType.GPU:
                 inputs, targets, stream = self._async_to_device(batch)
-                self.queue.put((inputs, targets, stream))
+                self._queue.put((inputs, targets, stream))
             else:
-                self.queue.put((*batch, None))
+                self._queue.put((*batch, None))
         
-        self.queue.put(None)
+        self._queue.put(None)
 
     def __iter__(self):
         if self.shuffle:
             np.random.shuffle(self.idxs)
-            
-        self.queue = Queue(self.max_prefetch)
+        
+        self._pool = mp.Pool(self.num_workers) if self.num_workers > 0 else None
+        self._queue = Queue(self.max_prefetch)
         thread = threading.Thread(target=self._prefetch_thread, daemon=True)
         thread.start()
         
-        while True:
-            batch = self.queue.get()
-            if batch is None:
-                break
-            
-            inputs, targets, stream = batch
-            if stream is not None:
-                stream.synchronize()
-            
-            yield inputs, targets
+        try:
+            while True:
+                batch = self._queue.get()
+                if batch is None:
+                    break
+                
+                inputs, targets, stream = batch
+                if stream is not None:
+                    stream.synchronize()
+                
+                yield inputs, targets
+                
+        finally:
+            if self._pool is not None:
+                self._pool.close()
+                self._pool.join()
             
             
     def __len__(self):
