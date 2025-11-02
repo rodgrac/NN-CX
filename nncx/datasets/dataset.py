@@ -5,7 +5,7 @@ from enum import Enum
 
 from nncx.config import PROJECT_ROOT
 from nncx.tensor import Tensor
-from nncx.enums import DataType
+from nncx.enums import DataType, BackendType
 
 class Dataset(ABC):
     class TargetType(Enum):
@@ -34,9 +34,7 @@ class Dataset(ABC):
         return len(self.inputs)
     
     
-    def __getitem__(self, key):
-        idx, backend = key
-        
+    def __getitem__(self, idx):        
         data_item = self.inputs[idx]
         target_item = self.targets[idx]
         
@@ -49,8 +47,8 @@ class Dataset(ABC):
         data_dtype = DataType.FLOAT32 if np.issubdtype(data_item.dtype, np.floating) else DataType.INT32
         target_dtype = DataType.FLOAT32 if np.issubdtype(target_item.dtype, np.floating) else DataType.INT32
         
-        return Tensor(data_item, backend=backend, dtype=data_dtype, grad_en=True), \
-                Tensor(target_item, backend=backend, dtype=target_dtype)
+        return Tensor(data_item, backend_type=BackendType.CPU, dtype=data_dtype, grad_en=True), \
+                Tensor(target_item, backend_type=BackendType.CPU, dtype=target_dtype)
         
         
     def set_transforms(self, transforms_inputs, transforms_targets=[]):
@@ -111,9 +109,7 @@ class SubDataset:
     def __len__(self):
         return len(self.indices)
     
-    def __getitem__(self, key):
-        idx, backend = key
-        
+    def __getitem__(self, idx):        
         # Save any existing dataset transform to restore later
         orig_ds_transforms_inputs = self.dataset.transforms_inputs
         orig_ds_transforms_targets = self.dataset.transforms_targets
@@ -121,7 +117,7 @@ class SubDataset:
         self.dataset.transforms_inputs = self.transforms_inputs
         self.dataset.transforms_targets = self.transforms_targets
         
-        data_item, target_item = self.dataset[(self.indices[idx], backend)]
+        data_item, target_item = self.dataset[self.indices[idx]]
         
         # Restore orig transform
         self.dataset.transforms_inputs = orig_ds_transforms_inputs

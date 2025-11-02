@@ -7,7 +7,7 @@ from nncx.utils import timeit
 def train(model, loss_fn, optimizer, dataloader, epochs, sched=None,
         accum_steps=4, patience=5
     ):
-    assert type(model.backend) == type(dataloader['train'].backend), "Model and data need to be of same backend type!"
+    assert type(model.backend_type) == type(dataloader['train'].backend_type), "Model and data need to be of same backend type!"
     
     best_val_loss = float('inf')
     no_improve_epochs = 0
@@ -24,7 +24,8 @@ def train(model, loss_fn, optimizer, dataloader, epochs, sched=None,
                 model.train()
             else:
                 model.eval()
-                                
+            
+            global_steps = 0
             for step, (inputs, targets) in enumerate(tqdm(dataloader[split])):
                 with Tensor.no_grad(split == 'val'):        # Apply no_grad only when split is val
                     preds = model(inputs)
@@ -39,6 +40,8 @@ def train(model, loss_fn, optimizer, dataloader, epochs, sched=None,
                     if (step+1) % accum_steps == 0 or (step+1 == len(dataloader[split])):   
                         optimizer.step()
                         optimizer.zero_grad()
+                
+                global_steps += 1
                                                                     
             epoch_loss[split] /= len(dataloader[split])
 
@@ -65,7 +68,7 @@ def train(model, loss_fn, optimizer, dataloader, epochs, sched=None,
 
 @timeit
 def evaluate(model, loss_fn, dataloader):
-    assert type(model.backend) == type(dataloader['test'].backend), "Model and data need to be of same backend type!"
+    assert type(model.backend_type) == type(dataloader['test'].backend_type), "Model and data need to be of same backend type!"
     
     model.eval()
     

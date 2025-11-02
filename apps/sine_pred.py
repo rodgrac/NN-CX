@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 
 sys.path.append('./')
 
-from nncx.backend.utils import init_backend
 from nncx.datasets.sinefn import Dataset, SineFn
 from nncx.dataloader import DataLoader
 from nncx.models.sinemlp import SineMLP
@@ -17,16 +16,16 @@ from nncx.enums import BackendType
 
 
 if __name__ == '__main__':
-    backend = init_backend(BackendType.CPU)
+    backend_type = BackendType.CPU
 
     ds = SineFn(10000)
     train_idx, val_idx = Dataset.train_val_split_idxs(ds, val_split=0.2)
         
     dl = dict()
-    dl['train'] = DataLoader(ds, backend=backend, batch_size=32, idxs=train_idx, shuffle=True)
-    dl['val'] = DataLoader(ds, backend=backend, batch_size=32, idxs=val_idx, shuffle=False)
+    dl['train'] = DataLoader(ds, backend_type=backend_type, batch_size=32, idxs=train_idx, shuffle=True)
+    dl['val'] = DataLoader(ds, backend_type=backend_type, batch_size=32, idxs=val_idx, shuffle=False)
     
-    m = SineMLP(backend=backend)
+    m = SineMLP(backend_type=backend_type)
     # m.load_parameters('weights/sine_pred.npz')
             
     loss_fn = MSELoss()
@@ -39,7 +38,7 @@ if __name__ == '__main__':
     x_test = np.linspace(0, 2* np.pi, 100)
     y_gt = np.sin(x_test)
         
-    y_pred = m(Tensor(np.expand_dims(x_test, axis=-1), backend=backend))
+    y_pred = m(Tensor(np.expand_dims(x_test, axis=-1), backend_type=backend_type))
     
     plt.figure(figsize=(10, 6))
     plt.plot(x_test, y_gt, label='Ground truth', color='blue')

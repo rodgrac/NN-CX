@@ -8,8 +8,8 @@ class ReLU:
     def __call__(self, x) -> Any:
         return self.forward(x)
     
-    def forward(self, x):
-        out = Tensor(data=np.maximum(0, x.data), backend=x.backend, grad_en=x.grad_en)
+    def forward(self, x: Tensor):
+        out = Tensor(data=np.maximum(0, x.data), backend_type=x.backend_type, grad_en=x.grad_en)
         
         if out.grad_en:
             out.grad_fn = lambda grad: [grad * (x.data > 0)]
@@ -22,11 +22,11 @@ class ReLU:
         
         
 class Sigmoid:
-    def __call__(self, x) -> Any:
+    def __call__(self, x: Tensor) -> Any:
         return self.forward(x)
     
     def forward(self, x):
-        out = Tensor(1/(1 + x.backend.exp(-x.data)), backend=x.backend, grad_en=x.grad_en)
+        out = Tensor(1/(1 + x.backend.exp(-x.data)), backend_type=x.backend_type, grad_en=x.grad_en)
         
         if out.grad_en:
             out.grad_fn = lambda grad: [grad * out.data * (1 - out.data)]
@@ -39,12 +39,12 @@ class Sigmoid:
     
     
 class Tanh:
-    def __call__(self, x) -> Any:
+    def __call__(self, x: Tensor) -> Any:
         return self.forward(x)
     
     def forward(self, x):
         out = Tensor((x.backend.exp(x.data) - x.backend.exp(-x.data)) /(x.backend.exp(x.data) + x.backend.exp(-x.data)), 
-                     backend=x.backend, grad_en=x.grad_en)
+                     backend_type=x.backend_type, grad_en=x.grad_en)
         
         if out.grad_en:
             out.grad_fn = lambda grad: [grad * (1 - out.data**2.0)]
@@ -57,13 +57,13 @@ class Tanh:
     
 
 class SoftMax:
-    def __call__(self, x):
+    def __call__(self, x: Tensor):
         return self.forward(x)
     
     def forward(self, x):
         exp_x = x.backend.exp(x.data - x.backend.max(x.data, axis=-1, keepdims=True))
         out = Tensor((exp_x / x.backend.sum(exp_x, axis=-1, keepdims=True)),
-                     backend=x.backend, grad_en=x.grad_en)
+                     backend_type=x.backend_type, grad_en=x.grad_en)
         
         if out.grad_en:
             bsz, out_sz = out.shape

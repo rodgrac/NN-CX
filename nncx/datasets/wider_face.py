@@ -3,7 +3,7 @@ import random
 import numpy as np
 from PIL import Image
 
-from nncx.enums import DataType
+from nncx.enums import DataType, BackendType
 from nncx.tensor import Tensor
 from nncx.datasets.dataset import Dataset
 from nncx.datasets.utils import download_extract_file
@@ -75,9 +75,7 @@ class WIDERFace(Dataset):
     def __len__(self):
         return len(self.inputs)
     
-    def __getitem__(self, key):
-        idx, backend = key
-        
+    def __getitem__(self, idx):        
         data_item = self.inputs[idx]
         target_item = self.targets[idx]
         
@@ -112,9 +110,9 @@ class WIDERFace(Dataset):
         data_dtype = DataType.FLOAT32 if np.issubdtype(img.dtype, np.floating) else DataType.INT32
         target_dtype = DataType.FLOAT32 if np.issubdtype(bbox.dtype, np.floating) else DataType.INT32
         
-        return Tensor(img, backend=backend, dtype=data_dtype, grad_en=True), \
-                (Tensor(bbox, backend=backend, dtype=target_dtype), \
-                Tensor(label, backend=backend, dtype=target_dtype))
+        return Tensor(img, backend_type=BackendType.CPU, dtype=data_dtype, grad_en=True), \
+                (Tensor(bbox, backend_type=BackendType.CPU, dtype=target_dtype), \
+                Tensor(label, backend_type=BackendType.CPU, dtype=target_dtype))
     
     
     def _sample_negetives(self, boxes, W, H):

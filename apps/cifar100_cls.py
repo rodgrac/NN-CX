@@ -1,4 +1,3 @@
-from nncx.backend.utils import init_backend
 from nncx.datasets.cifar100 import CIFAR100Train, CIFAR100Test
 from nncx.dataloader import DataLoader
 from nncx.datasets import transform
@@ -17,8 +16,7 @@ if __name__ == '__main__':
     batch_size = 512
     epochs = 25
     lr = 0.05
-    
-    backend = init_backend(BackendType.GPU)
+    backend_type = BackendType.GPU
     
     train_val_ds = CIFAR100Train(label_type='fine')
     test_ds = CIFAR100Test(label_type='fine')
@@ -43,16 +41,16 @@ if __name__ == '__main__':
     test_ds.set_transforms(val_test_transforms_x, transforms_y)
     
     dl = dict()
-    dl['train'] = DataLoader(train_ds, backend=backend, batch_size=batch_size, shuffle=True)
-    dl['val'] = DataLoader(val_ds, backend=backend, batch_size=batch_size, shuffle=False)
-    dl['test'] = DataLoader(test_ds, backend=backend, batch_size=batch_size, shuffle=False)
+    dl['train'] = DataLoader(train_ds, backend_type=backend_type, batch_size=batch_size, shuffle=True)
+    dl['val'] = DataLoader(val_ds, backend_type=backend_type, batch_size=batch_size, shuffle=False)
+    dl['test'] = DataLoader(test_ds, backend_type=backend_type, batch_size=batch_size, shuffle=False)
 
-    model = ImageClassifier(backend, out_features=256*8*8, num_classes=test_ds.num_labels)
+    model = ImageClassifier(backend_type, out_features=256*8*8, num_classes=test_ds.num_labels)
     
     loss_fn = CrossEntropyLoss()
     
     if do_train:
-        opt = SGD(backend, model.parameters(), lr=lr, momentum=0.9)
+        opt = SGD(backend_type, model.parameters(), lr=lr, momentum=0.9)
         sched = schedulers.CosineAnnealingLR(opt, T_max=epochs)
         train(model, loss_fn, opt, dl, epochs, sched=sched)
         

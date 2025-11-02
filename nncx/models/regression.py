@@ -4,12 +4,12 @@ from nncx.layers.activations import ReLU
 
 
 class Regression(Model):
-    def __init__(self, input_dim, backend):
-        super().__init__(backend)
+    def __init__(self, input_dim, backend_type):
+        super().__init__(backend_type)
         
-        self.linear1 = Linear(input_dim, 64, backend=backend)
-        self.linear2 = Linear(64, 32, backend=backend)
-        self.linear3 = Linear(32, 1, backend=backend)
+        self.linear1 = Linear(input_dim, 64, backend_type=backend_type)
+        self.linear2 = Linear(64, 32, backend_type=backend_type)
+        self.linear3 = Linear(32, 1, backend_type=backend_type)
         self.relu = ReLU()
         
         

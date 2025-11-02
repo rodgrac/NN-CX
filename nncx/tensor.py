@@ -1,32 +1,34 @@
 import copy
 import uuid
 import numpy as np
+import cupy as cp
 from typing import Tuple
 
 from nncx import utils
-from nncx.backend.utils import get_backend_type
 from nncx.enums import DataType, BackendType
 
 class Tensor:
     
     _no_grad = False        # static var to control grad compute
     
-    def __init__(self, data=None, shape=None, dtype=DataType.FLOAT32, backend=None, grad_en=False) -> None:
-        if backend is None:
-            raise ValueError('Backend argument is mandatory')
+    def __init__(self, data=None, shape=None, dtype=DataType.FLOAT32, backend_type=BackendType.CPU, grad_en=False) -> None:
+        self.backend_type = backend_type
         
-        self.backend = backend
+        self.dtype_map = {
+            DataType.FLOAT32 : self.backend.float32,
+            DataType.INT32 : self.backend.int32
+        }
         
         if data is not None:
             if np.isscalar(data):       # FIXME: don't convert to 2d tensor, keep it 1d
                 data = [[data]]     
             
-            self.data = self.backend.array(data, dtype)    
+            self.data = self.backend.asarray(data, order='C', dtype=self.dtype_map[dtype])    
             
         elif shape is not None:
             assert isinstance(shape, tuple), "shape argument needs to be a tuple!"
                 
-            self.data = self.backend.zeros(shape, dtype)
+            self.data = self.backend.zeros(shape, self.dtype_map[dtype])
         else:
             raise ValueError("Either data or shape needs to be specified!")
         
@@ -42,9 +44,13 @@ class Tensor:
         
         self._zero_grad()
         
+    
+    @property
+    def backend(self):
+        return _get_backend_obj(self.backend_type)
+        
     def __hash__(self):
         return hash(self.uuid)
-    
     
     def __eq__(self, other) -> bool:
         if isinstance(other, Tensor):
@@ -53,12 +59,12 @@ class Tensor:
     
     
     def __getitem__(self, idx):
-        return Tensor(self.data[idx], dtype=self.dtype, backend=self.backend, grad_en=self.grad_en)
+        return Tensor(self.data[idx], dtype=self.dtype, backend_type=self.backend_type, grad_en=self.grad_en)
     
     
     def _zero_grad(self):
         if self.grad_en:
-            self.grad = self.backend.zeros(self.data.shape, self.dtype)
+            self.grad = self.backend.zeros(self.data.shape, self.dtype_map[self.dtype])
         else:
             self.grad = None
         
@@ -73,11 +79,10 @@ class Tensor:
         self.shape = self.data.shape
         self.size = self.data.size
         self.ndims = self._ndims()
-        
     
     def backward(self, grad=None):
         if grad is None:  
-            grad = self.backend.full(self.data.shape, 1.0, self.dtype)       
+            grad = self.backend.full(self.data.shape, 1.0, self.dtype_map[self.dtype])       
         self.grad = grad
                 
         sorted_tensors = utils.topo_sort(self)
@@ -113,16 +118,16 @@ class Tensor:
             
                 
     def detach(self):
-        return Tensor(self.data, dtype=self.dtype, backend=self.backend, grad_en=False)
-        
+        return Tensor(self.data, dtype=self.dtype, backend_type=self.backend_type, grad_en=False)
+       
                 
     def to_dtype(self, dtype):
-        self.data = self.data.astype(self.backend.dtype_map[dtype])
+        self.data = self.data.astype(self.dtype_map[dtype])
         self.dtype = dtype
         return self
     
     def get(self):
-        if get_backend_type(self.backend) == BackendType.GPU:
+        if self.backend_type == BackendType.GPU:
             return self.data.get()
         else:
             return self.data
@@ -130,7 +135,7 @@ class Tensor:
     def reshape(self, shape: Tuple):
         out = Tensor(self.data.reshape(*shape),
                      dtype=self.dtype, 
-                     backend=self.backend,
+                     backend_type=self.backend_type,
                      grad_en=self.grad_en
                     )
 
@@ -143,14 +148,14 @@ class Tensor:
     
     def __add__(self, other):
         if not isinstance(other, Tensor):
-            other = Tensor(data=other, dtype=self.dtype, backend=self.backend)
+            other = Tensor(data=other, dtype=self.dtype, backend_type=self.backend_type)
 
         assert self.dtype == other.dtype, "Tensors need to be of same data type!"
         assert type(self.backend) == type(other.backend), "Tensors need to be of same backend type!"
         
         out = Tensor(self.backend.add(self.data, other.data), 
                      dtype=self.dtype, 
-                     backend=self.backend,
+                     backend_type=self.backend_type,
                      grad_en=self.grad_en or other.grad_en
                      )
         
@@ -162,14 +167,14 @@ class Tensor:
     
     def __mul__(self, other):
         if not isinstance(other, Tensor):
-            other = Tensor(data=other, dtype=self.dtype, backend=self.backend)
+            other = Tensor(data=other, dtype=self.dtype, backend_type=self.backend_type)
         
         assert self.dtype == other.dtype, "Tensors need to be of same data type!"
         assert type(self.backend) == type(other.backend), "Tensors need to be of same backend type!"
         
-        out = Tensor(self.backend.mul(self.data, other.data), 
+        out = Tensor(self.backend.multiply(self.data, other.data), 
                      dtype=self.dtype,
-                     backend=self.backend,
+                     backend_type=self.backend_type,
                      grad_en=self.grad_en or other.grad_en
                      )
         
@@ -183,7 +188,7 @@ class Tensor:
         assert isinstance(other, (int, float)), "only (int, float) are supported exponent types"
         assert type(self.backend) == type(other.backend), "Tensors need to be of same backend type!"
         
-        out = Tensor(self.data ** other, dtype=self.dtype, backend=self.backend, grad_en=self.grad_en)
+        out = Tensor(self.data ** other, dtype=self.dtype, backend_type=self.backend_type, grad_en=self.grad_en)
         
         out.grad_en = self.grad_en
         if out.grad_en:
@@ -194,7 +199,7 @@ class Tensor:
     
     def __matmul__(self, other):
         if not isinstance(other, Tensor):
-            other = Tensor(data=other, dtype=self.dtype, backend=self.backend)
+            other = Tensor(data=other, dtype=self.dtype, backend_type=self.backend_type)
             
         assert self.dtype == other.dtype, "Tensors need to be of same data type!"
         assert type(self.backend) == type(other.backend), "Tensors need to be of same backend type!"
@@ -202,7 +207,7 @@ class Tensor:
         if self.ndims == 1 and other.ndims == 1:    # 1-d 
             out = Tensor(self.backend.dot(self.data, other.data), 
                          dtype=self.dtype,
-                         backend=self.backend,
+                         backend_type=self.backend_type,
                          grad_en=self.grad_en or other.grad_en
                          )
             
@@ -212,7 +217,7 @@ class Tensor:
         else:
             out = Tensor(self.backend.matmul(self.data, other.data), 
                          dtype=self.dtype,
-                         backend=self.backend,
+                         backend_type=self.backend_type,
                          grad_en=self.grad_en or other.grad_en
                          )    
             
@@ -231,14 +236,15 @@ class Tensor:
     def transpose(self, *axes):
         out = Tensor(self.data.transpose(*axes), 
                      dtype=self.dtype,
-                     backend=self.backend, 
+                     backend_type=self.backend_type, 
                      grad_en=self.grad_en
                     )
                         
         if out.grad_en:
             if not len(axes):
-                axes = tuple(range(out.ndims))[::-1]
-            out.grad_fn = lambda grad: [grad.transpose(tuple(self.backend.argsort(axes).tolist()))]
+                axes = tuple(reversed(range(out.ndims)))
+            axes = np.argsort(axes).tolist()
+            out.grad_fn = lambda grad: [grad.transpose(axes)]
             out._prev = [self]
             
         return out
@@ -250,7 +256,7 @@ class Tensor:
     def exp(self):
         out = Tensor(self.backend.exp(self.data), 
                      dtype=self.dtype,
-                     backend=self.backend, 
+                     backend_type=self.backend_type, 
                      grad_en=self.grad_en
                      )
         
@@ -264,7 +270,7 @@ class Tensor:
     def argmax(self, axis=None):
         out = Tensor(self.backend.argmax(self.data, axis=axis), 
                      dtype=self.dtype,
-                     backend=self.backend, 
+                     backend_type=self.backend_type, 
                      grad_en=False
                      )
         
@@ -293,14 +299,14 @@ class Tensor:
         return self**-1 * other
     
     def rand(self, min_val, max_val):        
-        self.data[:] = self.backend.rand(self.shape, self.dtype, min_val, max_val)
+        self.data[:] = self.backend.rand(self.shape, self.dtype_map[self.dtype], min_val, max_val)
         
         return self
     
     def randn(self):
         assert self.dtype == DataType.FLOAT32, "Data type needs to be float"
        
-        self.data[:] = self.backend.randn(self.shape)
+        self.data[:] = self.backend.random.randn(*self.shape)
         
         return self
     
@@ -312,7 +318,7 @@ class Tensor:
     def stack(tensors, axis=0):
         out_data = [t.data for t in tensors]
         out = Tensor(tensors[0].backend.stack(out_data, axis=axis), 
-                     backend=tensors[0].backend, 
+                     backend_type=tensors[0].backend_type, 
                      dtype=tensors[0].dtype,
                      grad_en=np.any([t.grad_en for t in tensors]))
         
@@ -339,5 +345,13 @@ class Tensor:
     
             
     def __repr__(self) -> str:
-        return f"Tensor(data=\n{self.data}, shape={self.shape}, dtype={self.dtype}, backend={get_backend_type(self.backend)}, grad_en={self.grad_en})"
+        return f"Tensor(data=\n{self.data}, shape={self.shape}, dtype={self.dtype}, backend={self.backend_type}, grad_en={self.grad_en})"
         
+        
+def _get_backend_obj(backend_type):
+    if backend_type == BackendType.CPU:
+        return np
+    elif backend_type == BackendType.GPU:
+        return cp
+    else:
+        raise NotImplementedError("Backend not supported!")

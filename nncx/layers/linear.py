@@ -3,12 +3,12 @@ from nncx.tensor import Tensor
 
 
 class Linear:
-    def __init__(self, in_features, out_features, backend, bias=True) -> None:
-        self.w = Tensor(shape=(out_features, in_features), backend=backend, grad_en=True).randn()
+    def __init__(self, in_features, out_features, backend_type, bias=True) -> None:
+        self.w = Tensor(shape=(out_features, in_features), backend_type=backend_type, grad_en=True).randn()
         self.w.data *= (2.0 / in_features)**0.5
          
         if bias:
-            self.bias = Tensor(shape=(out_features,), backend=backend, grad_en=True)
+            self.bias = Tensor(shape=(out_features,), backend_type=backend_type, grad_en=True)
         else:
             self.bias = None
             

@@ -1,11 +1,15 @@
-from nncx.tensor import Tensor
+from nncx.tensor import Tensor, _get_backend_obj
 
 
 class MaxPool2d:
-    def __init__(self, backend, kernel_size=2, stride=2):
+    def __init__(self, backend_type, kernel_size=2, stride=2):
         self.kernel_size = kernel_size
         self.stride = stride
-        self.backend = backend
+        self.backend_type = backend_type
+        
+    @property
+    def backend(self):
+        return _get_backend_obj(self.backend_type)
         
     def __call__(self, x: Tensor):
         return self.forward_opt(x)
@@ -17,7 +21,7 @@ class MaxPool2d:
         H_out = (H - self.kernel_size) // self.stride + 1
         W_out = (W - self.kernel_size) // self.stride + 1
         
-        out = Tensor(shape=(B, C, H_out, W_out), backend=self.backend, grad_en=x.grad_en)
+        out = Tensor(shape=(B, C, H_out, W_out), backend_type=x.backend_type, grad_en=x.grad_en)
         
         # im2col
         cols = []
@@ -28,13 +32,13 @@ class MaxPool2d:
         cols = self.backend.stack(cols, axis=-1)        # (B, Cin, K*K, Hout*Wout)
         
         out = self.backend.max(cols, axis=2).reshape(B, C, H_out, W_out)
-        out = Tensor(out, backend=x.backend, grad_en=x.grad_en)
+        out = Tensor(out, backend_type=x.backend_type, grad_en=x.grad_en)
                 
         if out.grad_en:            
             def _backward(grad):
                 max_idx = self.backend.argmax(cols, axis=2).reshape(B*C, -1)
 
-                dx_cols = self.backend.zeros((B * C, cols.shape[-1], cols.shape[-2]), x.dtype)  # (B*Cin, Hout*Wout, K*K)
+                dx_cols = self.backend.zeros((B * C, cols.shape[-1], cols.shape[-2]), x.dtype_map[x.dtype])  # (B*Cin, Hout*Wout, K*K)
                 
                 # Scatter
                 dx_cols[self.backend.arange(dx_cols.shape[0])[:, None],
@@ -44,7 +48,7 @@ class MaxPool2d:
                 dx_cols = dx_cols.transpose(0, 2, 1).reshape(B, C, self.kernel_size, self.kernel_size, -1)    # (B, Cin, K, K, Hout*Wout)
                 
                 # col2im
-                dx = self.backend.zeros(x.shape, x.dtype)
+                dx = self.backend.zeros(x.shape, x.dtype_map[x.dtype])
                 idx = 0
                 for i in range(0, H_out*self.stride, self.stride):
                     for j in range(0, W_out*self.stride, self.stride):
@@ -65,7 +69,7 @@ class MaxPool2d:
         H_out = (H - self.kernel_size) // self.stride + 1
         W_out = (W - self.kernel_size) // self.stride + 1
         
-        out = Tensor(shape=(B, C, H_out, W_out), backend=self.backend, grad_en=x.grad_en)
+        out = Tensor(shape=(B, C, H_out, W_out), backend_type=x.backend_type, grad_en=x.grad_en)
         
         cache = {}
         for row in range(H_out):
@@ -83,7 +87,7 @@ class MaxPool2d:
                 
         if out.grad_en:
             def _backward(grad):
-                dx = self.backend.zeros(x.data.shape, x.dtype)
+                dx = self.backend.zeros(x.data.shape, x.dtype_map[x.dtype])
                 for row in range(H_out):
                     for col in range(W_out):
                         row_s = row * self.stride

@@ -1,4 +1,3 @@
-from nncx.backend.utils import init_backend
 from nncx.datasets.wider_face import WIDERFace
 from nncx.datasets import transform
 from nncx.dataloader import DataLoader
@@ -9,6 +8,7 @@ from nncx import schedulers
 from nncx.trainer import train, evaluate
 from nncx.enums import BackendType
 import nncx.visualizer as viz
+import cupy as cp
 
 
 class DetectionLoss:
@@ -23,7 +23,7 @@ class DetectionLoss:
         # Mask out invalid targets with no bbox
         box_loss = self.smooth_l1(preds[0], targets[0], mask=targets[1])
         
-        print(f"[DETECTION LOSS] Box loss: {box_loss.detach().data:.2f}, cls loss: {cls_loss.detach().data:.2f}")
+        # print(f"[DETECTION LOSS] Box loss: {box_loss.detach().data:.2f}, cls loss: {cls_loss.detach().data:.2f}")
         
         return self.lambda_box * box_loss + cls_loss
         
@@ -36,8 +36,7 @@ if __name__ == '__main__':
     max_lr = 1e-3
     min_lr = 1e-5
     warmup_epochs = 2
-    
-    backend = init_backend(BackendType.GPU)
+    backend_type = BackendType.GPU
     
     train_val_ds = WIDERFace(split='train', num_faces='single', include_negatives=True)
     test_ds = WIDERFace(split='val', num_faces='single', include_negatives=True)
@@ -64,25 +63,24 @@ if __name__ == '__main__':
     viz.view_image_dataset(train_ds, backend)
     
     dl = dict()
-    dl['train'] = DataLoader(train_ds, backend=backend, batch_size=batch_size, shuffle=True)
-    dl['val'] = DataLoader(val_ds, backend=backend, batch_size=batch_size, shuffle=False)
-    dl['test'] = DataLoader(test_ds, backend=backend, batch_size=batch_size, shuffle=False)
+    dl['train'] = DataLoader(train_ds, backend_type=backend_type, batch_size=batch_size, shuffle=True)
+    dl['val'] = DataLoader(val_ds, backend_type=backend_type, batch_size=batch_size, shuffle=False)
+    dl['test'] = DataLoader(test_ds, backend_type=backend_type, batch_size=batch_size, shuffle=False)
     
-    model = FaceDetector(backend, in_size=input_size)
+    model = FaceDetector(backend_type, in_size=input_size)
     
     loss_fn = DetectionLoss()
     
     if do_train:
-        opt = SGD(backend, model.parameters(), lr=max_lr, momentum=0.9)
+        opt = SGD(backend_type, model.parameters(), lr=max_lr, momentum=0.9)
         
         cosine_sched = schedulers.CosineAnnealingLR(opt, T_max=epochs, eta_min=min_lr)
         sched = schedulers.WarmupLR(opt, cosine_sched, warmup_epochs, warmup_start_lr=min_lr)
         
         train(model, loss_fn, opt, dl, epochs, sched=sched)
         
-        model.save_parameters('weights/face_detector.npz')
     else:
-        model.load_parameters('weights/face_detector.npz')
+        model.load_parameters(f'weights/{model.__class__.__name__}/best_model.npz')
         
     preds, targets = evaluate(model, loss_fn, dl)
     

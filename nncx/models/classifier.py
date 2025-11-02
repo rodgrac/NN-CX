@@ -5,11 +5,11 @@ from nncx.layers.activations import ReLU
 
 
 class Classifier(Model):
-    def __init__(self, input_dim, num_classes, backend, hidden_dim=128):
-        super().__init__(backend)
+    def __init__(self, input_dim, num_classes, backend_type, hidden_dim=128):
+        super().__init__(backend_type)
         
-        self.linear1 = Linear(input_dim, hidden_dim, backend=backend)
-        self.linear2 = Linear(hidden_dim, num_classes, backend=backend)
+        self.linear1 = Linear(input_dim, hidden_dim, backend_type=backend_type)
+        self.linear2 = Linear(hidden_dim, num_classes, backend_type=backend_type)
         self.relu = ReLU()
         
     def forward(self, x):

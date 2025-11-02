@@ -1,4 +1,3 @@
-from nncx.backend.utils import init_backend
 from nncx.datasets.fmnist import FashionMNISTTrain, FashionMNISTTest
 from nncx.datasets.transform import Normalize, Flatten, OneHotEncode
 from nncx.dataloader import DataLoader
@@ -14,7 +13,7 @@ if __name__ == '__main__':
     do_train = False
     batch_size = 32
     
-    backend = init_backend(BackendType.CPU)
+    backend_type = BackendType.CPU
     
     train_ds = FashionMNISTTrain()
     val_test_ds = FashionMNISTTest()
@@ -27,12 +26,12 @@ if __name__ == '__main__':
     val_test_ds.set_transforms(transform_x, transform_y)
     
     dl = dict()
-    dl['train'] = DataLoader(train_ds, backend=backend, batch_size=batch_size, shuffle=True)
-    dl['val'] = DataLoader(val_ds, backend=backend, batch_size=batch_size, shuffle=False)
-    dl['test'] = DataLoader(test_ds, backend=backend, batch_size=batch_size, shuffle=False)
+    dl['train'] = DataLoader(train_ds, backend_type=backend_type, batch_size=batch_size, shuffle=True)
+    dl['val'] = DataLoader(val_ds, backend_type=backend_type, batch_size=batch_size, shuffle=False)
+    dl['test'] = DataLoader(test_ds, backend_type=backend_type, batch_size=batch_size, shuffle=False)
 
     first_batch = next(iter(dl['train']))
-    model = Classifier(first_batch[0].shape[-1], train_ds.num_labels, backend)
+    model = Classifier(first_batch[0].shape[-1], train_ds.num_labels, backend_type)
     
     loss_fn = CrossEntropyLoss()
     

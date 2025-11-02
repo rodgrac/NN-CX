@@ -2,28 +2,18 @@ import os
 from abc import ABC, abstractmethod
 from typing import Any
 
-import numpy as np
-import cupy as cp
-
-from nncx.backend.utils import get_backend_type
-from nncx.enums import BackendType
-
+from nncx.tensor import _get_backend_obj
     
 class Model(ABC):
-    def __init__(self, backend) -> None:
+    def __init__(self, backend_type) -> None:
         super().__init__()
         self._modelparams = []
         self.training = None
+        self.backend_type = backend_type
         
-        self.backend = backend
-        
-        self.backend_mod = None
-        if get_backend_type(backend) ==BackendType.CPU:
-            self.backend_mod = np
-        elif get_backend_type(backend) ==BackendType.GPU:
-            self.backend_mod = cp
-        else:
-            raise NotImplementedError
+    @property
+    def backend(self):
+        return _get_backend_obj(self.backend_type)
         
     @abstractmethod
     def forward(self, x):
@@ -59,11 +49,12 @@ class Model(ABC):
                 for i, param in enumerate(attr._params):
                     param_dict[attr_name + '_p' + str(i)] = param.data
             
-            self.backend_mod.savez(save_path, **param_dict)
+            self.backend.savez(save_path, **param_dict)
+            
         print(f"Model parameters saved as {save_path}")
         
     def load_parameters(self, load_path):
-        params_dict = self.backend_mod.load(load_path, allow_pickle=True)
+        params_dict = self.backend.load(load_path, allow_pickle=True)
         for attr_name in dir(self):
             attr = getattr(self, attr_name)
             if callable(attr) and hasattr(attr, '_params'):

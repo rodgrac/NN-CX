@@ -1,4 +1,3 @@
-from nncx.backend.utils import init_backend
 from nncx.datasets.california_housing import CaliforniaHousing
 from nncx.datasets.transform import Standardize
 from nncx.dataloader import DataLoader
@@ -12,7 +11,7 @@ from nncx.visualizer import plot_predictions_targets
 if __name__ == '__main__':
     do_train = False
     
-    backend = init_backend(BackendType.CPU)
+    backend_type = BackendType.CPU
     
     ds = CaliforniaHousing()
     train_ds, val_ds, test_ds = ds.split_dataset(train_ratio=0.8, shuffle=True, test_set=True, seed=42)
@@ -26,13 +25,13 @@ if __name__ == '__main__':
     ds.set_transforms(train_transforms_x, train_transforms_y)
         
     dl = dict()
-    dl['train'] = DataLoader(train_ds, backend=backend, batch_size=32, shuffle=True)
-    dl['val'] = DataLoader(val_ds, backend=backend, batch_size=32, shuffle=False)
-    dl['test'] = DataLoader(test_ds, backend=backend, batch_size=32, shuffle=False)
+    dl['train'] = DataLoader(train_ds, backend_type=backend_type, batch_size=32, shuffle=True)
+    dl['val'] = DataLoader(val_ds, backend_type=backend_type, batch_size=32, shuffle=False)
+    dl['test'] = DataLoader(test_ds, backend_type=backend_type, batch_size=32, shuffle=False)
     
     first_batch = next(iter(dl['train']))
     
-    model = Regression(first_batch[0].shape[-1], backend=backend)
+    model = Regression(first_batch[0].shape[-1], backend_type=backend_type)
     
     loss_fn = MSELoss()
 

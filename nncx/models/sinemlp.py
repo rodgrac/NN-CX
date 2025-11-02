@@ -4,12 +4,12 @@ from nncx.layers.activations import Tanh
 
 
 class SineMLP(Model):
-    def __init__(self, backend) -> None:
-        super().__init__(backend)
+    def __init__(self, backend_type) -> None:
+        super().__init__(backend_type)
         
-        self.linear1 = Linear(1, 32, backend=backend)
-        self.linear2 = Linear(32, 32, backend=backend)
-        self.linear3 = Linear(32, 1, backend=backend)
+        self.linear1 = Linear(1, 32, backend_type=backend_type)
+        self.linear2 = Linear(32, 32, backend_type=backend_type)
+        self.linear3 = Linear(32, 1, backend_type=backend_type)
         self.tanh = Tanh()
         
                 

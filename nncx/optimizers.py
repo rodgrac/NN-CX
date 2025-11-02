@@ -1,6 +1,8 @@
+from nncx.tensor import _get_backend_obj
+
 class SGD:
-    def __init__(self, backend, params, lr=0.01, momentum=0.9) -> None:
-        self.backend = backend
+    def __init__(self, backend_type, params, lr=0.01, momentum=0.9) -> None:
+        self.backend_type = backend_type
         self.params = params
         self.lr = lr
         self.momentum = momentum
@@ -12,7 +14,7 @@ class SGD:
                 continue
             
             if param not in self.v:
-                self.v[param] = self.backend.zeros(param.shape, param.dtype)
+                self.v[param] = self.backend.zeros(param.shape, param.dtype_map[param.dtype])
                 
             v = self.v[param]
             
@@ -24,3 +26,8 @@ class SGD:
     def zero_grad(self):
         for param in self.params:
             param._zero_grad()
+            
+            
+    @property
+    def backend(self):
+        return _get_backend_obj(self.backend_type)

@@ -3,7 +3,6 @@ import numpy as np
 import torch.nn as nn
 import pytest
 
-from nncx.backend.utils import init_backend
 from nncx.tensor import Tensor
 from nncx.layers.conv2d import Conv2d
 from nncx.enums import BackendType, DataType
@@ -22,11 +21,11 @@ def test_conv2d(bsz, in_ch, out_ch, H, W, ksize, pad, stride):
     np.random.seed(42)
     torch.manual_seed(42)
     
-    backend = init_backend(BackendType.CPU)
+    backend_type = BackendType.CPU
     
-    x = Tensor(shape=(bsz, in_ch, H, W), dtype=DataType.FLOAT32, backend=backend, grad_en=True).rand(-1, 1)
+    x = Tensor(shape=(bsz, in_ch, H, W), dtype=DataType.FLOAT32, backend_type=backend_type, grad_en=True).rand(-1, 1)
         
-    conv = Conv2d(in_ch, out_ch, backend, ksize, stride, pad, bias=True)
+    conv = Conv2d(in_ch, out_ch, backend_type, ksize, stride, pad, bias=True)
     
     y = conv(x)
     y.backward()

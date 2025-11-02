@@ -2,24 +2,24 @@ from nncx.models.model import Model
 from nncx.layers import *
 
 class ImageClassifier(Model):
-    def __init__(self, backend, out_features, num_classes):
-        super().__init__(backend)
+    def __init__(self, backend_type, out_features, num_classes):
+        super().__init__(backend_type)
         
         self.features = Sequential(
-            Conv2d(3, 64, backend, kernel_size=3, stride=1, pad=True),
+            Conv2d(3, 64, backend_type, kernel_size=3, stride=1, pad=True),
             ReLU(),
-            MaxPool2d(backend, kernel_size=2, stride=2),
-            Conv2d(64, 128, backend, kernel_size=3, stride=1, pad=True),
+            MaxPool2d(backend_type, kernel_size=2, stride=2),
+            Conv2d(64, 128, backend_type, kernel_size=3, stride=1, pad=True),
             ReLU(),
-            MaxPool2d(backend, kernel_size=2, stride=2),
-            Conv2d(128, 256, backend, kernel_size=3, stride=1, pad=True),
+            MaxPool2d(backend_type, kernel_size=2, stride=2),
+            Conv2d(128, 256, backend_type, kernel_size=3, stride=1, pad=True),
             ReLU(),
         )
             
         self.fc = Sequential(
-            Linear(out_features, 512, backend),
+            Linear(out_features, 512, backend_type),
             ReLU(),
-            Linear(512, num_classes, backend)
+            Linear(512, num_classes, backend_type)
         )
         
     def forward(self, x):

@@ -7,7 +7,7 @@ class MSELoss:
     def __call__(self, pred, target):
         backend = pred.backend
         loss = Tensor(backend.sum((pred.data - target.data)**2, axis=None, keepdims=False) / pred.size,
-                      backend=backend,
+                      backend_type=pred.backend_type,
                       grad_en=pred.grad_en)
         
         if loss.grad_en:
@@ -28,7 +28,7 @@ class CrossEntropyLoss:
             softmax_out = self.softmax(pred).data
         
         loss = Tensor(-backend.sum(target.data * backend.log(softmax_out + 1e-9)) / pred.shape[0],
-                      backend=backend,
+                      backend_type=pred.backend_type,
                       grad_en=pred.grad_en)
         
         if loss.grad_en:
@@ -49,7 +49,7 @@ class BCEWithLogitsLoss:
         max_val = backend.maximum(pred.data, 0) 
         loss_val = backend.mean(max_val - pred.data * target.data + backend.log(1 + backend.exp(-backend.abs(pred.data))))
         
-        loss = Tensor(loss_val, backend=backend, grad_en=pred.grad_en)
+        loss = Tensor(loss_val, backend_type=pred.backend_type, grad_en=pred.grad_en)
         
         if loss.grad_en:
             with Tensor.no_grad():
@@ -72,7 +72,7 @@ class SmoothL1Loss:
         diff = pred.data - target.data
         abs_diff = backend.abs(diff)
         
-        smooth_mask = backend.astype(abs_diff < self.beta, DataType.FLOAT32)
+        smooth_mask = (abs_diff < self.beta).astype(backend.float32)
         loss_val = smooth_mask * (0.5 * diff**2 / self.beta) + (1 - smooth_mask) * (abs_diff - 0.5 * self.beta)
         
         if mask is not None:
@@ -82,7 +82,7 @@ class SmoothL1Loss:
         else:
             loss_val = backend.mean(loss_val)
         
-        loss = Tensor(loss_val, backend=backend, grad_en=pred.grad_en)
+        loss = Tensor(loss_val, backend_type=pred.backend_type, grad_en=pred.grad_en)
                 
         if loss.grad_en:
             grad_val = smooth_mask * (diff / self.beta) + (1 - smooth_mask) * backend.sign(diff)

@@ -1,9 +1,8 @@
 from typing import Any
-from nncx.tensor import Tensor
-
+from nncx.tensor import Tensor, _get_backend_obj
 
 class Conv2d:
-    def __init__(self, in_channels, out_channels, backend, kernel_size=3, stride=1, pad=False,
+    def __init__(self, in_channels, out_channels, backend_type, kernel_size=3, stride=1, pad=False,
                  bias=True):
         self.in_channels = in_channels
         self.out_channels = out_channels
@@ -11,18 +10,23 @@ class Conv2d:
         self.stride = stride
         self.pad = pad
         
-        self.backend = backend
+        self.backend_type = backend_type
         
         self.w = Tensor(shape=(out_channels, in_channels, kernel_size, kernel_size),
-                        backend=backend, grad_en=True).randn()
+                        backend_type=backend_type, grad_en=True).randn()
         self.w.data *= (2.0 / (in_channels * kernel_size**2))**0.5
         
         if bias:
-            self.bias = Tensor(shape=(out_channels,), backend=backend, grad_en=True)
+            self.bias = Tensor(shape=(out_channels,), backend_type=backend_type, grad_en=True)
         else:
             self.bias = None
             
         self._params = [self.w, self.bias] if self.bias is not None else [self.w]
+        
+    
+    @property
+    def backend(self):
+        return _get_backend_obj(self.backend_type)
         
         
     def __call__(self, x: Tensor):
@@ -54,12 +58,12 @@ class Conv2d:
         w_col = self.w.data.reshape(self.out_channels, -1)  # (Cout, Cin*K*K)
         
         # GEMM
-        out = self.backend.einsum("bpc,oc->bop", [cols.transpose(0, 2, 1), w_col]).reshape(B, self.out_channels, H_out, W_out)
+        out = self.backend.einsum("bpc,oc->bop", cols.transpose(0, 2, 1), w_col).reshape(B, self.out_channels, H_out, W_out)
         
         if self.bias:
             out += self.bias.data[None, :, None, None]
             
-        out = Tensor(out, backend=self.backend, grad_en=x.grad_en)
+        out = Tensor(out, backend_type=x.backend_type, grad_en=x.grad_en)
         
                         
         if out.grad_en:
@@ -71,13 +75,13 @@ class Conv2d:
                     self.bias.grad = self.backend.sum(grad, axis=(0, 2, 3))
                     
                 # weight grad
-                self.w.grad = self.backend.einsum("bop,bcp->oc", [grad_col, cols]).reshape(self.w.data.shape)
+                self.w.grad = self.backend.einsum("bop,bcp->oc", grad_col, cols).reshape(self.w.data.shape)
                 
                 # input grad
-                dx_cols = self.backend.einsum("bop,ow->bwp", [grad_col, w_col]).reshape(B, C_in, self.kernel_size, self.kernel_size, -1)
+                dx_cols = self.backend.einsum("bop,ow->bwp", grad_col, w_col).reshape(B, C_in, self.kernel_size, self.kernel_size, -1)
                 
                 #col2im
-                dx = self.backend.zeros(x_pad.shape, x.dtype)
+                dx = self.backend.zeros(x_pad.shape, x.dtype_map[x.dtype])
                 idx = 0
                 for i in range(0, H_out*self.stride, self.stride):
                     for j in range(0, W_out*self.stride, self.stride):
@@ -106,7 +110,7 @@ class Conv2d:
         H_out = (H - self.kernel_size + 2 * pad_w) // self.stride + 1
         W_out = (W - self.kernel_size + 2 * pad_w) // self.stride + 1
         
-        out = Tensor(shape=(B, self.out_channels, H_out, W_out), backend=self.backend, grad_en=x.grad_en)
+        out = Tensor(shape=(B, self.out_channels, H_out, W_out), backend_type=x.backend_type, grad_en=x.grad_en)
         
         x_pad = self.backend.pad(x.data, ((0, 0), (0, 0), (pad_w, pad_w), (pad_w, pad_w)))
         
@@ -132,7 +136,7 @@ class Conv2d:
                     
                 # weight and input grad
                 self.w.grad.fill(0)
-                dx = self.backend.zeros(x_pad.shape, x.dtype)
+                dx = self.backend.zeros(x_pad.shape, x.dtype_map[x.dtype])
                 for b in range(B):
                     for c in range(self.out_channels):
                         for row in range(H_out):
