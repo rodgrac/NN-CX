@@ -305,9 +305,12 @@ class Tensor:
     def __rtruediv__(self, other):
         return self**-1 * other
     
-    def rand(self, min_val, max_val):        
-        self.data[:] = self.backend.rand(self.shape, self.dtype_map[self.dtype], min_val, max_val)
-        
+    def rand(self, min_val, max_val):
+        if self.dtype == DataType.INT32:
+            self.data[:] = self.backend.random.randint(min_val, max_val + 1, self.shape, dtype=self.dtype_map[self.dtype])
+        elif self.dtype == DataType.FLOAT32:
+            self.data[:] = self.backend.random.uniform(min_val, max_val, self.shape).astype(self.dtype_map[self.dtype])
+                        
         return self
     
     def randn(self):
