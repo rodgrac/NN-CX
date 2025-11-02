@@ -119,7 +119,14 @@ class Tensor:
                 
     def detach(self):
         return Tensor(self.data, dtype=self.dtype, backend_type=self.backend_type, grad_en=False)
-       
+    
+    
+    def to(self, backend_type):
+        if self.backend_type == backend_type:
+            return self
+        
+        return Tensor(self.data, dtype=self.dtype, backend_type=backend_type, grad_en=self.grad_en)
+        
                 
     def to_dtype(self, dtype):
         self.data = self.data.astype(self.dtype_map[dtype])

@@ -1,25 +1,78 @@
 import math
 import numpy as np
+import multiprocessing as mp
+import threading
+from queue import Queue
+import cupy as cp
 
 from nncx.tensor import Tensor
+from nncx.utils import timeit
+from nncx.enums import BackendType
 
 class DataLoader:
-    def __init__(self, dataset, backend, batch_size, shuffle=True) -> None:
+    def __init__(self, dataset, backend_type, batch_size, shuffle=True, num_workers=4, max_prefetch=4) -> None:
         self.dataset = dataset
-        self.backend = backend
+        self.backend_type = backend_type
         self.batch_size = batch_size
         self.shuffle = shuffle
+        self.num_workers = num_workers
+        self.max_prefetch = max_prefetch
         
         self.idxs = np.arange(len(self.dataset))
         
+    def _iter_batches(self):
+        for i in range(0, len(self.idxs), self.batch_size):
+            batch_idx = self.idxs[i:i+self.batch_size]
+            if self.num_workers > 0:
+                with mp.Pool(self.num_workers) as pool:
+                    batch = pool.map(self.dataset.__getitem__, batch_idx)
+            else:
+                batch = [self.dataset[idx] for idx in batch_idx]
+                
+            yield self._collate(batch)
+            
+    def _async_to_device(self, batch):
+        inputs, targets = batch
+        stream = cp.cuda.Stream(non_blocking=True)
+        
+        with stream:
+            inputs = inputs.to(self.backend_type)
+            if isinstance(targets, (list, tuple)):
+                targets = tuple(t.to(self.backend_type) for t in targets)
+            else:
+                targets = targets.to(self.backend_type)
+                
+        return inputs, targets, stream
+    
+    def _prefetch_thread(self):
+        for batch in self._iter_batches():
+            if self.backend_type is BackendType.GPU:
+                inputs, targets, stream = self._async_to_device(batch)
+                self.queue.put((inputs, targets, stream))
+            else:
+                self.queue.put((*batch, None))
+        
+        self.queue.put(None)
+
     def __iter__(self):
         if self.shuffle:
             np.random.shuffle(self.idxs)
             
-        for i in range(0, len(self.idxs), self.batch_size):
-            batch = [self.dataset[(idx, self.backend)] for idx in self.idxs[i:i+self.batch_size]]
+        self.queue = Queue(self.max_prefetch)
+        thread = threading.Thread(target=self._prefetch_thread, daemon=True)
+        thread.start()
+        
+        while True:
+            batch = self.queue.get()
+            if batch is None:
+                break
             
-            yield self._collate(batch)
+            inputs, targets, stream = batch
+            if stream is not None:
+                stream.synchronize()
+            
+            yield inputs, targets
+            
             
     def __len__(self):
         if self.idxs is None:
