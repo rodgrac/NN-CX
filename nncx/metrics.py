@@ -56,7 +56,21 @@ class ClassificationMetrics:
     
     
 class DetectionMetrics:
-    def IoU(self, a, b):  # (x1, y1, x2, y2)
+    def IoU(self, a, b, center_format=True):  # (cx, cy, w, h)
+        if center_format:   
+            a_x1 = a[0] - a[2] / 2
+            a_y1 = a[1] - a[3] / 2
+            a_x2 = a[0] + a[2] / 2
+            a_y2 = a[1] + a[3] / 2
+            
+            b_x1 = b[0] - b[2] / 2
+            b_y1 = b[1] - b[3] / 2
+            b_x2 = b[0] + b[2] / 2
+            b_y2 = b[1] + b[3] / 2
+            
+            # (x1, y1, x2, y2)
+            a, b = (a_x1, a_y1, a_x2, a_y2), (b_x1, b_y1, b_x2, b_y2)
+        
         xA = max(a[0], b[0]); yA = max(a[1], b[1])
         xB = min(a[2], b[2]); yB = min(a[3], b[3])
         inter = max(0, xB - xA + 1) * max(0, yB - yA + 1)

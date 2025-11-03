@@ -94,12 +94,7 @@ class WIDERFace(Dataset):
       
         # Normalize
         H, W = img.shape[:2]
-        bbox = np.array([
-            (x + 0.5 * w) / W,
-            (y + 0.5 * h) / H,
-            w / W,
-            h / H
-        ], dtype=np.float32)
+        bbox = self._convert_bbox_to_center_normalized(target_item[0], W, H)
         
         # HWC -> CHW before transform
         img = img.transpose(2, 0, 1)
@@ -122,10 +117,28 @@ class WIDERFace(Dataset):
             size = random.randint(32, min(W, H) // 2)
             x = random.randint(0, W - size)
             y = random.randint(0, H - size)
-            crop = np.array([x, y, size, size])
+            crop = (x, y, size, size)
+            crop_cnorm = self._convert_bbox_to_center_normalized(crop, W, H)
             
-            if all(iou(np.array(box), crop) < 0.1 for box in boxes):
+            # Convert to center normalized
+            boxes_cnorm = []
+            for box in boxes:
+                boxes_cnorm.append(self._convert_bbox_to_center_normalized(box, W, H))
+            
+            if all(iou(box, crop_cnorm) < 0.1 for box in boxes_cnorm):
                 return x, y, size, size
         
         # fallback (no safe region found)
         return 0, 0, min(W, H)//2, min(W, H)//2
+
+    @staticmethod
+    def _convert_bbox_to_center_normalized(bbox, W, H):
+        x, y, w, h = bbox
+        bbox_cnorm = np.array([
+            (x + 0.5 * w) / W,
+            (y + 0.5 * h) / H,
+            w / W,
+            h / H
+        ], dtype=np.float32)
+        
+        return bbox_cnorm
