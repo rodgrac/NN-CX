@@ -30,10 +30,99 @@ class Conv2d:
         
         
     def __call__(self, x: Tensor):
-        return self.forward_opt(x)
+        return self.forward_opt2(x)
+    
+    def _im2col_idxs(self, Cin, H, W, K, pad, stride):
+        # Compute output spatial dims
+        Hout = (H - K + 2 * pad) // stride + 1
+        Wout = (W - K + 2 * pad) // stride + 1
+    
+        # KxK window
+        i0 = self.backend.repeat(self.backend.arange(K), K)     # (K*K)
+        i0 = self.backend.tile(i0, Cin)                         # (C*K*K)
+        j0 = self.backend.tile(self.backend.arange(K), K * Cin)
+        
+        # Channel
+        k_idx = self.backend.repeat(self.backend.arange(Cin), K * K).reshape(-1, 1)        # (C*K*K)
+        
+        # Patches
+        i1 = self.backend.repeat(self.backend.arange(Hout), Wout) * stride          # (Hout*Wout)
+        j1 = self.backend.tile(self.backend.arange(Wout), Hout) * stride            # (Hout*Wout)
+        
+        # Broadcast to get all (C*K*K, H_out*W_out)
+        i = i0[:, None] + i1[None, :]
+        j = j0[:, None] + j1[None, :]
+        
+        return k_idx, i, j
+        
+    
+    def forward_opt2(self, x: Tensor):
+        B, C_in, H, W = x.shape
+        
+        if self.pad:
+            pad_w = self.kernel_size // 2
+        else:
+            pad_w = 0
+            
+        H_out = (H - self.kernel_size + 2 * pad_w) // self.stride + 1
+        W_out = (W - self.kernel_size + 2 * pad_w) // self.stride + 1
+                
+        x_pad = self.backend.pad(x.data, ((0, 0), (0, 0), (pad_w, pad_w), (pad_w, pad_w)))
+        
+        # im2col
+        cache_key = (C_in, H, W, self.kernel_size, pad_w, self.stride)
+        if not hasattr(self, "_im2col_cache"):
+            self._im2col_cache = {}
+        if cache_key not in self._im2col_cache:
+            k_idx, i_idx, j_idx = self._im2col_idxs(C_in, H, W, self.kernel_size, pad_w, self.stride)
+            self._im2col_cache[cache_key] = (k_idx, i_idx, j_idx)
+        else:
+            k_idx, i_idx, j_idx = self._im2col_cache[cache_key]
+            
+        cols = x_pad[:, k_idx, i_idx, j_idx]    # (B, Cin*K*K, Hout*Wout)
+        
+        # flatten weights
+        w_col = self.w.data.reshape(self.out_channels, -1)  # (Cout, Cin*K*K)
+        
+        # GEMM
+        out = (cols.transpose(0, 2, 1) @ w_col.T).transpose(0, 2, 1).reshape(B, self.out_channels, H_out, W_out)    # (B, Cout, Hout, Wout)
+        
+        if self.bias:
+            out += self.bias.data[None, :, None, None]
+            
+        out = Tensor(out, backend_type=x.backend_type, grad_en=x.grad_en)
+        
+
+        if out.grad_en:
+            def _backward(grad):
+                grad_col = grad.transpose(0, 2, 3, 1).reshape(-1, self.out_channels)            # (B*Hout*Wout, Cout)
+                cols_2d = cols.transpose(0, 2, 1).reshape(grad_col.shape[0], -1)                   # (B*Hout*Wout, Cin*K*K)
+                   
+                # bias grad
+                if self.bias is not None:
+                    self.bias.grad = self.backend.sum(grad, axis=(0, 2, 3))
+                    
+                self.w.grad = (grad_col.T @ cols_2d).reshape(self.w.data.shape)                    # (Cout, Cin, K, K)
+                
+                dx_cols = (grad_col @ w_col).reshape(B, -1, cols_2d.shape[-1]).transpose(0, 2, 1)     # (B, Cin*K*K, Hout*Wout)
+                
+                #col2im - Scatter add
+                # add every dx_cols[:, p, q] into the corresponding dx[:, k_idx[p], i_idx[p, q], j_idx[p, q]]
+                dx = self.backend.zeros(x_pad.shape, dtype=x.dtype_map[x.dtype])
+                self.backend.add.at(dx, (slice(None), k_idx, i_idx, j_idx), dx_cols)
+                
+                if self.pad:
+                    dx = dx[:, :, pad_w:-pad_w, pad_w:-pad_w]
+                
+                return [dx]
+            
+            out.grad_fn = _backward
+            out._prev = [x]
+        
+        return out
     
     
-    def forward_opt(self, x: Tensor):
+    def forward_opt1(self, x: Tensor):
         B, C_in, H, W = x.shape
         
         if self.pad:
