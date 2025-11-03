@@ -18,14 +18,12 @@ class DetectionLoss:
         self.lambda_box = lambda_box
         
     def __call__(self, preds, targets):
-        cls_loss = self.bce(preds[1], targets[1])
+        cls_loss = self.bce(preds[1], targets[1])[0]
         
         # Mask out invalid targets with no bbox
-        box_loss = self.smooth_l1(preds[0], targets[0], mask=targets[1])
-        
-        # print(f"[DETECTION LOSS] Box loss: {box_loss.detach().data:.2f}, cls loss: {cls_loss.detach().data:.2f}")
-        
-        return self.lambda_box * box_loss + cls_loss
+        box_loss = self.smooth_l1(preds[0], targets[0], mask=targets[1])[0]
+                
+        return self.lambda_box * box_loss + cls_loss, box_loss, cls_loss
         
     
 if __name__ == '__main__':
@@ -36,6 +34,7 @@ if __name__ == '__main__':
     max_lr = 1e-3
     min_lr = 1e-5
     warmup_epochs = 2
+    lambda_box = 5
     backend_type = BackendType.GPU
     
     train_val_ds = WIDERFace(split='train', num_faces='single', include_negatives=True)
@@ -60,8 +59,8 @@ if __name__ == '__main__':
     val_ds.set_transforms(val_test_transforms_x)
     test_ds.set_transforms(val_test_transforms_x)
     
-    viz.view_image_dataset(train_ds, backend)
-    
+    viz.view_image_dataset(train_ds)
+        
     dl = dict()
     dl['train'] = DataLoader(train_ds, backend_type=backend_type, batch_size=batch_size, shuffle=True)
     dl['val'] = DataLoader(val_ds, backend_type=backend_type, batch_size=batch_size, shuffle=False)
@@ -69,7 +68,7 @@ if __name__ == '__main__':
     
     model = FaceDetector(backend_type, in_size=input_size)
     
-    loss_fn = DetectionLoss()
+    loss_fn = DetectionLoss(lambda_box=lambda_box)
     
     if do_train:
         opt = SGD(backend_type, model.parameters(), lr=max_lr, momentum=0.9)

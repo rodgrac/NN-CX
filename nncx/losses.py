@@ -14,7 +14,7 @@ class MSELoss:
             loss.grad_fn = lambda grad: [grad * 2 * (pred.data - target.data) / target.size]
             loss._prev = [pred] 
                 
-        return loss
+        return (loss,)
     
     
 class CrossEntropyLoss:
@@ -35,7 +35,7 @@ class CrossEntropyLoss:
             loss.grad_fn = lambda grad: [grad * (softmax_out - target.data) / pred.shape[0]]
             loss._prev = [pred]
             
-        return loss
+        return (loss,)
     
     
 class BCEWithLogitsLoss:
@@ -59,7 +59,7 @@ class BCEWithLogitsLoss:
             loss.grad_fn = lambda grad: [grad * (sigmoid_out - target.data) / pred.shape[0]]
             loss._prev = [pred]
             
-        return loss
+        return (loss,)
     
 
 class SmoothL1Loss:
@@ -95,5 +95,5 @@ class SmoothL1Loss:
             loss.grad_fn = lambda grad: [grad * grad_val]
             loss._prev = [pred]
             
-        return loss
+        return (loss,)
         

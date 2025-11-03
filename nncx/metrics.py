@@ -3,7 +3,7 @@ import numpy as np
 
 class ClassificationMetrics:
     def accuracy(self, preds, targets):
-        preds, targets = np.array(preds), np.array(targets)
+        preds, targets = preds.get(), targets.get()
         
         if preds.ndim != 1:     # Sample
             preds = np.argmax(preds, axis=-1)
@@ -19,7 +19,7 @@ class ClassificationMetrics:
     
     
     def precision_recall_f1(self, preds, targets, num_classes, reduce_weighted_mean=True):
-        preds, targets = np.array(preds), np.array(targets)
+        preds, targets = preds.get(), targets.get()
         
         if preds.ndim != 1:     # Sample
             preds = np.argmax(preds, axis=-1)

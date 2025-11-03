@@ -83,6 +83,9 @@ class RandomCrop(Transform):
         self.padding = padding
         
     def __call__(self, input_tensor, target_tensor, target_type):
+        if target_type == Dataset.TargetType.BBOX:
+            raise NotImplementedError
+        
         if self.padding > 0:
             input_tensor = np.pad(input_tensor, ((0, 0), (self.padding, self.padding), (self.padding, self.padding)), mode='constant')
          

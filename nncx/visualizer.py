@@ -7,14 +7,14 @@ from typing import List
 
 from nncx.datasets.dataset import Dataset
 
-def view_image_dataset(dataset: Dataset, backend, grid_size=(5, 5)):
+def view_image_dataset(dataset: Dataset, grid_size=(5, 5)):
     fig, axs = plt.subplots(*grid_size, figsize=(8, 8))
     axs = axs.flatten()
     
     idxs = random.sample(range(len(dataset)), k=grid_size[0] * grid_size[1])
         
     for i in range(len(idxs)):
-        input, target = dataset[(idxs[i], backend)]
+        input, target = dataset[idxs[i]]
         img = input.get()
         if img.ndim == 1:   # Flattened
             img = img.reshape(dataset.image_size)

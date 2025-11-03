@@ -10,7 +10,7 @@ from nncx.utils import timeit
 from nncx.enums import BackendType
 
 class DataLoader:
-    def __init__(self, dataset, backend_type, batch_size, shuffle=True, num_workers=4, max_prefetch=4) -> None:
+    def __init__(self, dataset, backend_type, batch_size, shuffle=True, num_workers=4, max_prefetch=2) -> None:
         self.dataset = dataset
         self.backend_type = backend_type
         self.batch_size = batch_size

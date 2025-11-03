@@ -68,6 +68,7 @@ class WarmupLR(LRScheduler):
         self.warmup_epochs = warmup_epochs
         self.warmup_start_lr = warmup_start_lr
         self._finished_warmup = False
+        self.opt.lr = warmup_start_lr
         
     def step(self):
         #Warmup
