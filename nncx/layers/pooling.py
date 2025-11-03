@@ -12,10 +12,55 @@ class MaxPool2d:
         return _get_backend_obj(self.backend_type)
         
     def __call__(self, x: Tensor):
-        return self.forward_opt(x)
+        return self.forward_opt2(x)
+
     
+    def forward_opt2(self, x: Tensor):
+        B, C, H, W = x.shape
+        
+        H_out = (H - self.kernel_size) // self.stride + 1
+        W_out = (W - self.kernel_size) // self.stride + 1
+        
+        # (B, C, H-K+1, W-K+1, K, K)
+        windows = self.backend.lib.stride_tricks.sliding_window_view(
+            x.data, (self.kernel_size, self.kernel_size), axis=(-2, -1))
+        windows = windows[:, :, ::self.stride, ::self.stride, :, :]
+        out = windows.max(axis=(-1, -2))
+        out = Tensor(out, backend_type=x.backend_type, grad_en=x.grad_en)
+        
+        max_mask = (windows == out.data[..., None, None])
+               
+        if out.grad_en:            
+            def _backward(grad):
+                # (B, C, Hout, Wout)
+                max_idx = self.backend.argmax(max_mask.reshape(B, C, H_out, W_out, -1), axis=-1)
+                
+                dh, dw = max_idx // self.kernel_size, max_idx % self.kernel_size
+                
+                # Compute absolute coordinates
+                h_base = self.backend.arange(H_out)[None, None, :, None] * self.stride
+                w_base = self.backend.arange(W_out)[None, None, None, :] * self.stride
+                h_abs = h_base + dh
+                w_abs = w_base + dw
+                
+                batch_ch_idx = self.backend.repeat(self.backend.arange(B*C), H_out*W_out) 
+
+                dx = self.backend.zeros_like(x.data, dtype=x.dtype_map[x.dtype])  
+                
+                self.backend.add.at(dx.reshape(B * C, H, W),
+                                    (batch_ch_idx, h_abs.reshape(-1), w_abs.reshape(-1)),
+                                    grad.reshape(-1))
+                
+                dx = dx.reshape(B, C, H, W)
+                        
+                return [dx]
+            
+            out.grad_fn = _backward
+            out._prev = [x]
+        
+        return out
     
-    def forward_opt(self, x: Tensor):
+    def forward_opt1(self, x: Tensor):
         B, C, H, W = x.shape
         
         H_out = (H - self.kernel_size) // self.stride + 1
