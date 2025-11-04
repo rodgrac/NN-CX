@@ -53,9 +53,7 @@ class Tensor:
         return hash(self.uuid)
     
     def __eq__(self, other) -> bool:
-        if isinstance(other, Tensor):
-            return self.backend.array_equal(self.data, other.data)
-        return False
+        return isinstance(other, Tensor) and self.uuid == other.uuid
     
     
     def __getitem__(self, idx):
