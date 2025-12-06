@@ -69,10 +69,12 @@ class RandomHorizontalFlip(Transform):
     def __call__(self, input_tensor, target_tensor, target_type):
         if np.random.rand() < self.p:
             input_tensor = input_tensor[:, :, ::-1]
-            if target_type==Dataset.TargetType.BBOX:
-                cx, cy, w, h = target_tensor
-                cx = 1.0 - cx
-                target_tensor = np.array([cx, cy, w, h], dtype=np.float32)
+            
+            if target_tensor is not None:
+                if target_type==Dataset.TargetType.BBOX:
+                    cx, cy, w, h = target_tensor
+                    cx = 1.0 - cx
+                    target_tensor = np.array([cx, cy, w, h], dtype=np.float32)
 
         return input_tensor, target_tensor
     
@@ -115,13 +117,14 @@ class ResizeLetterbox(Transform):
         
         input_tensor = np.pad(input_tensor, ((pad_top, self.size - new_H - pad_top), (pad_left, self.size - new_W - pad_left), (0, 0)), mode='constant')
         
-        if target_type == Dataset.TargetType.BBOX:
-            cx, cy, w, h = target_tensor
-            cx *= W; cy *= H; w *= W; h *= H
-            cx = (cx * scale + pad_left) / self.size
-            cy = (cy * scale + pad_top) / self.size
-            bw = w * scale / self.size
-            bh = h * scale / self.size
-            target_tensor = np.array([cx, cy, bw, bh], dtype=np.float32)
+        if target_tensor is not None:
+            if target_type == Dataset.TargetType.BBOX:
+                cx, cy, w, h = target_tensor
+                cx *= W; cy *= H; w *= W; h *= H
+                cx = (cx * scale + pad_left) / self.size
+                cy = (cy * scale + pad_top) / self.size
+                bw = w * scale / self.size
+                bh = h * scale / self.size
+                target_tensor = np.array([cx, cy, bw, bh], dtype=np.float32)
 
         return input_tensor.transpose(2, 0, 1), target_tensor

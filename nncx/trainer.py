@@ -81,21 +81,27 @@ def evaluate(model, loss_fn, dataloader):
     preds_all = []
     targets_all = [] 
     test_loss = None
-    for inputs, targets in tqdm(dataloader['test']):
-        with Tensor.no_grad():        
+
+    with Tensor.no_grad():        
+        for inputs, targets in tqdm(dataloader['test']):
             preds = model(inputs)
             loss = loss_fn(preds, targets)
-            
-        if test_loss is None:
-            test_loss = (0.0, ) * len(loss)
-            
-        test_loss = tuple(a + b for a, b in zip(test_loss, (float(l.detach().data) for l in loss)))   
                 
-        preds_all.extend(preds)
-        targets_all.extend(targets)
+            if test_loss is None:
+                test_loss = (0.0, ) * len(loss)
+                
+            test_loss = tuple(a + b for a, b in zip(test_loss, (float(l.detach().data) for l in loss)))   
+            
+            if not isinstance(preds, tuple):
+                preds = (preds,)
+            if not isinstance(targets, tuple):
+                targets = (targets,)
     
-    test_loss = tuple(l / len(dataloader['test']) for l in test_loss)                                    
-    
-    print(f"[Trainer] Test loss: {tuple(f'{l:.4f}' for l in test_loss)}")
+            preds_all.extend([tuple(p[i] for p in preds) for i in range(preds[0].shape[0])])
+            targets_all.extend([tuple(t[i] for t in targets) for i in range(targets[0].shape[0])])
+        
+        test_loss = tuple(l / len(dataloader['test']) for l in test_loss)                                    
+        
+        print(f"[Trainer] Test loss: {tuple(f'{l:.4f}' for l in test_loss)}")
     
     return preds_all, targets_all

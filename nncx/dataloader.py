@@ -59,8 +59,8 @@ class DataLoader:
         
         self._pool = mp.Pool(self.num_workers) if self.num_workers > 0 else None
         self._queue = Queue(self.max_prefetch)
-        thread = threading.Thread(target=self._prefetch_thread, daemon=True)
-        thread.start()
+        prefetch_t = threading.Thread(target=self._prefetch_thread, daemon=True)
+        prefetch_t.start()
         
         try:
             while True:
@@ -74,7 +74,7 @@ class DataLoader:
                 
                 yield inputs, targets
                 
-        finally:
+        finally:            
             if self._pool is not None:
                 self._pool.close()
                 self._pool.join()
