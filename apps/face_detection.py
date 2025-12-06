@@ -6,6 +6,7 @@ from nncx.losses import BCEWithLogitsLoss, SmoothL1Loss
 from nncx.optimizers import SGD
 from nncx import schedulers
 from nncx.trainer import train, evaluate
+from nncx.metrics import DetectionMetrics
 from nncx.enums import BackendType
 import nncx.visualizer as viz
 import cupy as cp
@@ -82,7 +83,9 @@ if __name__ == '__main__':
         model.load_parameters(f'weights/{model.__class__.__name__}/best_model.npz')
         
     preds, targets = evaluate(model, loss_fn, dl)
-    
+        
+    det_metrics = DetectionMetrics()
+    det_metrics.compute(preds, targets)
    
     
 

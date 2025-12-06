@@ -1,5 +1,6 @@
 import numpy as np
 
+from nncx.utils import sigmoid
 
 class ClassificationMetrics:
     def accuracy(self, preds, targets):
@@ -56,6 +57,11 @@ class ClassificationMetrics:
     
     
 class DetectionMetrics:
+    def __init__(self, iou_thresh=0.5, conf_thresh=0.5):
+        self.iou_thresh = iou_thresh
+        self.conf_thresh = conf_thresh
+        self.reset()
+    
     def IoU(self, a, b, center_format=True):  # (cx, cy, w, h)
         if center_format:   
             a_x1 = a[0] - a[2] / 2
@@ -79,4 +85,40 @@ class DetectionMetrics:
         union = areaA + areaB - inter + 1e-9
         
         return inter / union
+    
+    def reset(self):
+        self.tp = 0
+        self.fp = 0
+        self.fn = 0
+        self.ious = []
+        
+    def compute(self, preds, targets):        
+        for pred in preds:
+            pred_bbox, conf = tuple(p.get() for p in pred)
+            if sigmoid(conf) < self.conf_thresh:
+                continue
+            
+            matched = False
+            for target in targets:
+                gt_bbox, _ = tuple(t.get() for t in target)
+                iou = self.IoU(pred_bbox, gt_bbox)
+                if iou >= self.iou_thresh:
+                    self.tp += 1
+                    self.ious.append(iou)
+                    matched = True
+                    break
+            if not matched:
+                self.fp += 1
+                
+        self.fn += max(0, len(targets) - self.tp)
+        
+        precision = self.tp / (self.tp + self.fp) if self.tp + self.fp > 0 else 0
+        recall = self.tp / (self.tp + self.fn) if self.tp + self.fn > 0 else 0
+            
+        f1 = 2 * (precision * recall) / (precision + recall)
+        mean_iou = np.mean(self.ious) if self.ious else 0.0
+        
+        print(f"[Metrics] Precision: {precision:.3f}, Recall: {recall:.3f}, "
+              f"F1: {f1:.3f}, Mean IoU: {mean_iou:.3f}")
+        
         
