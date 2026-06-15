@@ -100,9 +100,9 @@ class Conv2d:
                    
                 # bias grad
                 if self.bias is not None:
-                    self.bias.grad = self.backend.sum(grad, axis=(0, 2, 3))
-                    
-                self.w.grad = (grad_col.T @ cols_2d).reshape(self.w.data.shape)                    # (Cout, Cin, K, K)
+                    self.bias.grad += self.backend.sum(grad, axis=(0, 2, 3))
+
+                self.w.grad += (grad_col.T @ cols_2d).reshape(self.w.data.shape)                    # (Cout, Cin, K, K)
                 
                 dx_cols = (grad_col @ w_col).reshape(B, -1, cols_2d.shape[-1]).transpose(0, 2, 1)     # (B, Cin*K*K, Hout*Wout)
                 
