@@ -8,9 +8,10 @@ from nncx.utils import sigmoid
 from demos.demo_base import BaseDemo
 
 class FaceDetectDemo(BaseDemo):
-    def __init__(self, model, transforms_inputs=None, window_name='Demo'):
+    def __init__(self, model, transforms_inputs=None, conf_thresh=0.5, window_name='Demo'):
         super().__init__(model, transforms_inputs, window_name)
-        
+        self.conf_thresh = conf_thresh
+
     def postprocess(self, preds, frame_org, frame_pp):
         bbox, conf = preds
         
@@ -18,9 +19,12 @@ class FaceDetectDemo(BaseDemo):
         cx, cy, bw, bh = bbox.get().flatten() * cur_size
         conf = sigmoid(conf.get()[0])
         
+        if float(conf) < self.conf_thresh:
+            return frame_org
+        
         # Compute scaling & padding applied during letterboxing
-        scale = cur_size / max(frame_org.shape[-2], frame_org.shape[-1])
-        new_h, new_w = int(scale * frame_org.shape[-2]), int(scale * frame_org.shape[-1])
+        scale = cur_size / max(frame_org.shape[0], frame_org.shape[1])
+        new_h, new_w = int(scale * frame_org.shape[0]), int(scale * frame_org.shape[1])
         pad_top = (cur_size - new_h) // 2
         pad_left = (cur_size - new_w) // 2
         
@@ -37,8 +41,8 @@ class FaceDetectDemo(BaseDemo):
         # Clip to original frame
         x1 = int(max(0, cx - bw / 2))
         y1 = int(max(0, cy - bh / 2))
-        x2 = int(min(frame_org.shape[-1], cx + bw / 2))
-        y2 = int(min(frame_org.shape[-2], cy + bh / 2))
+        x2 = int(min(frame_org.shape[1], cx + bw / 2))
+        y2 = int(min(frame_org.shape[0], cy + bh / 2))
         
         cv2.rectangle(frame_org, (x1, y1), (x2, y2), (0, 255, 0), 2)
         

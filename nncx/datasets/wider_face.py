@@ -111,25 +111,33 @@ class WIDERFace(Dataset):
     
     
     def _sample_negetives(self, boxes, W, H):
-        """Sample a random crop far from any face (IoU < 0.1)."""
+        """Sample a random crop far from any face (IoU < 0.1).
+
+        Uses aspect-ratio-preserving crops so that after letterboxing they
+        produce the same padding distribution as positive (full-image) samples.
+        """
         iou = DetectionMetrics().IoU
+        boxes_cnorm = [self._convert_bbox_to_center_normalized(box, W, H) for box in boxes]
+        ar = W / H
         for _ in range(50):
-            size = random.randint(32, min(W, H) // 2)
-            x = random.randint(0, W - size)
-            y = random.randint(0, H - size)
-            crop = (x, y, size, size)
+            # Sample crop height, then derive width to preserve aspect ratio
+            max_h = min(H, int(W / ar))
+            crop_h = random.randint(max(32, max_h // 4), max_h // 2)
+            crop_w = int(crop_h * ar)
+            crop_w = max(1, min(crop_w, W))
+            crop_h = max(1, min(crop_h, H))
+            x = random.randint(0, W - crop_w)
+            y = random.randint(0, H - crop_h)
+            crop = (x, y, crop_w, crop_h)
             crop_cnorm = self._convert_bbox_to_center_normalized(crop, W, H)
-            
-            # Convert to center normalized
-            boxes_cnorm = []
-            for box in boxes:
-                boxes_cnorm.append(self._convert_bbox_to_center_normalized(box, W, H))
-            
+
             if all(iou(box, crop_cnorm) < 0.1 for box in boxes_cnorm):
-                return x, y, size, size
-        
-        # fallback (no safe region found)
-        return 0, 0, min(W, H)//2, min(W, H)//2
+                return x, y, crop_w, crop_h
+
+        # fallback: aspect-ratio crop from top-left
+        crop_h = H // 2
+        crop_w = int(crop_h * ar)
+        return 0, 0, min(crop_w, W), min(crop_h, H)
 
     @staticmethod
     def _convert_bbox_to_center_normalized(bbox, W, H):

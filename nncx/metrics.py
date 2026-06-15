@@ -79,9 +79,9 @@ class DetectionMetrics:
         
         xA = max(a[0], b[0]); yA = max(a[1], b[1])
         xB = min(a[2], b[2]); yB = min(a[3], b[3])
-        inter = max(0, xB - xA + 1) * max(0, yB - yA + 1)
-        areaA = max(0, a[2] - a[0] + 1) * max(0, a[3] - a[1] + 1)
-        areaB = max(0, b[2] - b[0] + 1) * max(0, b[3] - b[1] + 1)
+        inter = max(0, xB - xA) * max(0, yB - yA)
+        areaA = max(0, a[2] - a[0]) * max(0, a[3] - a[1])
+        areaB = max(0, b[2] - b[0]) * max(0, b[3] - b[1])
         union = areaA + areaB - inter + 1e-9
         
         return inter / union
@@ -92,32 +92,35 @@ class DetectionMetrics:
         self.fn = 0
         self.ious = []
         
-    def compute(self, preds, targets):        
-        for pred in preds:
+    def compute(self, preds, targets):
+        for pred, target in zip(preds, targets):
             pred_bbox, conf = tuple(p.get() for p in pred)
-            if sigmoid(conf) < self.conf_thresh:
+            gt_bbox, label = tuple(t.get() for t in target)
+
+            fires = sigmoid(conf)[0] >= self.conf_thresh
+            is_positive = float(label[0]) > 0.5
+
+            if not fires:
+                if is_positive:
+                    self.fn += 1
                 continue
-            
-            matched = False
-            for target in targets:
-                gt_bbox, _ = tuple(t.get() for t in target)
-                iou = self.IoU(pred_bbox, gt_bbox)
-                if iou >= self.iou_thresh:
-                    self.tp += 1
-                    self.ious.append(iou)
-                    matched = True
-                    break
-            if not matched:
+
+            if not is_positive:
                 self.fp += 1
-                
-        self.fn += max(0, len(targets) - self.tp)
-        
+                continue
+
+            iou = self.IoU(pred_bbox, gt_bbox)
+            if iou >= self.iou_thresh:
+                self.tp += 1
+                self.ious.append(iou)
+            else:
+                self.fp += 1
+
         precision = self.tp / (self.tp + self.fp) if self.tp + self.fp > 0 else 0
         recall = self.tp / (self.tp + self.fn) if self.tp + self.fn > 0 else 0
-            
-        f1 = 2 * (precision * recall) / (precision + recall)
+        f1 = 2 * (precision * recall) / (precision + recall + 1e-9)
         mean_iou = np.mean(self.ious) if self.ious else 0.0
-        
+
         print(f"[Metrics] Precision: {precision:.3f}, Recall: {recall:.3f}, "
               f"F1: {f1:.3f}, Mean IoU: {mean_iou:.3f}")
         

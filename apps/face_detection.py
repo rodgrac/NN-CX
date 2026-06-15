@@ -86,6 +86,9 @@ if __name__ == '__main__':
         
     det_metrics = DetectionMetrics()
     det_metrics.compute(preds, targets)
+    
+    viz.visualize_predictions(model, dl['test'])
+    
    
     
 

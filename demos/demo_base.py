@@ -12,6 +12,7 @@ class BaseDemo:
         self.running = True
         
     def preprocess(self, frame):
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         # HWC -> CHW
         frame = frame.transpose(2, 0, 1)
         
